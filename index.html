@@ -3,575 +3,660 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BVST • Lọc lỗi trùng thời gian X‑quang (Offline)</title>
+  <title>Lọc lỗi thời gian X-quang (Excel/CSV → Web)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root{
-      --bg:#f3f6fb; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
-      --brand:#0ea5e9; --brandDark:#0284c7; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
-      --softWarn: rgba(245,158,11,.10); --softBrand: rgba(14,165,233,.10);
-      --shadow: 0 12px 36px rgba(2,6,23,.08); --radius:18px;
-      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    .container{max-width:1200px;margin:0 auto;padding:20px}
-    .header{background:linear-gradient(90deg, rgba(14,165,233,.14), rgba(34,197,94,.10));
-      border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);
-      display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex;gap:12px;align-items:center}
-    .logo{width:44px;height:44px;border-radius:14px;background:#fff;border:1px solid var(--line);
-      display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--brandDark)}
-    h1{font-size:18px;margin:0}
-    .sub{color:var(--muted);font-size:13px;margin-top:2px}
-    .pill{border:1px solid var(--line); background:#fff; color:var(--muted); padding:6px 10px;border-radius:999px;font-size:12px}
-    .grid{display:grid;grid-template-columns:420px 1fr;gap:14px;margin-top:14px}
-    @media (max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-    .card h2{font-size:14px;margin:0 0 10px}
-    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input[type="file"],input[type="number"],input[type="text"],select{
-      width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff;font-size:14px}
-    input[type="number"]{font-family:var(--mono)}
-    .hint{margin-top:10px;padding:10px 12px;border-radius:14px;border-left:4px solid rgba(22,163,74,.7);
-      background:rgba(22,163,74,.06);color:var(--muted);font-size:13px}
-    .warnbox{margin-top:10px;padding:10px 12px;border-radius:14px;border-left:4px solid rgba(245,158,11,.8);
-      background:rgba(245,158,11,.08);color:var(--muted);font-size:13px}
-    .errbox{margin-top:10px;padding:10px 12px;border-radius:14px;border-left:4px solid rgba(239,68,68,.85);
-      background:rgba(239,68,68,.06);color:#991b1b;font-size:13px;white-space:pre-wrap}
-    .switches{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-    .sw{display:flex;align-items:center;gap:10px}
-    .sw input{width:40px;height:22px;appearance:none;background:#cbd5e1;border-radius:999px;position:relative;outline:none;cursor:pointer;transition:.15s}
-    .sw input:checked{background:rgba(14,165,233,.85)}
-    .sw input:before{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:999px;background:#fff;transition:.15s}
-    .sw input:checked:before{left:21px}
-    .sw span{font-size:13px}
-
-    .actions{position:sticky;top:12px;z-index:10;background:rgba(243,246,251,.75);backdrop-filter:blur(8px);
-      padding:10px;border-radius:16px;border:1px solid rgba(226,232,240,.9);display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-    .btn{border:none;border-radius:14px;padding:12px 14px;font-weight:800;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;gap:8px}
-    .btn-primary{background:var(--brand);color:#fff}
-    .btn-primary:hover{background:var(--brandDark)}
-    .btn-secondary{background:#fff;border:1px solid var(--line);color:var(--ink)}
-    .btn-secondary:hover{background:#f8fafc}
-    .btn-success{background:var(--ok);color:#fff}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    @media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
-    .kpi{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}
-    .kpi .t{font-size:12px;color:var(--muted)}
-    .kpi .v{font-size:24px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
-    .kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
-    .mono{font-family:var(--mono)}
-    .muted{color:var(--muted)}
-
-    .tablewrap{max-height:58vh;overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff;margin-top:12px}
-    table{width:100%;border-collapse:separate;border-spacing:0}
-    thead th{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);
-      padding:10px;text-align:left;font-size:12px;color:var(--muted);white-space:nowrap}
-    tbody td{border-bottom:1px solid rgba(226,232,240,.7);padding:10px;font-size:13px;vertical-align:top}
-    tbody tr.err{background:var(--softWarn)}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:900;
-      border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.18);color:#92400e;white-space:nowrap}
+    body{background:#f6f8fc}
+    .card{border-radius:16px}
+    .table thead th{position:sticky;top:0;background:#ffffff;z-index:1}
+    .nowrap{white-space:nowrap}
+    .smallcode{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .kpi{font-size:1.9rem;font-weight:800}
+    .muted{color:#6b7280}
+    .badge-soft{background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff}
+    .rowerr{background:rgba(255,193,7,.10)}
+    .diag{white-space:pre-wrap}
+    .btn-primary{font-weight:700}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <div class="logo">BV</div>
-        <div>
-          <h1>Lọc lỗi trùng thời gian — Ca <b>X‑quang</b> (Offline)</h1>
-          <div class="sub">Không cần Internet. Nhận diện đúng header dù CSV có nhiều dòng tiêu đề phía trên.</div>
+<div class="container py-4">
+  <div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+      <div>
+        <h1 class="h4 mb-1">Lọc lỗi thời gian cho <b>ca chụp X-quang</b></h1>
+        <div class="muted">
+          Upload <b>Excel (.xlsx)</b> hoặc <b>CSV</b> (dữ liệu giống <span class="smallcode">Sheet1</span>) → lọc ca X-quang và báo lỗi trùng.
         </div>
       </div>
-      <div class="row">
-        <span class="pill">Chủ đề sáng</span>
-        <span class="pill">Ưu tiên CSV</span>
-        <span class="pill">Tự dò header</span>
+      <div class="d-flex gap-2">
+        <span class="badge badge-soft">Chủ đề sáng</span>
+        <span class="badge badge-soft">Dùng được GitHub Pages</span>
+      </div>
+    </div>
+
+    <hr class="my-3">
+
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-6">
+        <label class="form-label">Chọn file dữ liệu</label>
+        <input id="file" class="form-control" type="file" accept=".xlsx,.xls,.csv,.txt,.tsv" />
+        <div class="form-text">
+          Ưu tiên sheet <b>Sheet1</b> (nếu là Excel). Nếu mạng chặn CDN khiến không đọc được Excel, bạn có thể <b>Save As CSV UTF-8</b> rồi tải CSV vào.
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <label class="form-label">Tiêu chí nhận diện ca X-quang</label>
+        <div class="d-flex flex-wrap gap-2">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="xqByService" checked>
+            <label class="form-check-label" for="xqByService">Tên DVKT chứa “x-quang / xq”</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="xqByMachine" checked>
+            <label class="form-check-label" for="xqByMachine">Mã máy bắt đầu bằng “XQ”</label>
+          </div>
+        </div>
+
+        <div class="row g-2 mt-2">
+          <div class="col-md-6">
+            <label class="form-label">Ngưỡng “thực hiện dưới” (phút)</label>
+            <input id="minMinutes" type="number" class="form-control" value="6" min="1" step="1">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">So khớp trùng theo (phút làm tròn) <span class="text-muted" style="font-size:12px">(giây luôn bỏ qua)</span></label>
+            <input id="roundToMin" type="number" class="form-control" value="1" min="1" step="1">
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>1) Tải dữ liệu</h2>
-        <label>Chọn file dữ liệu</label>
-        <input id="file" type="file" accept=".csv,.txt,.tsv" />
-        <div class="hint">
-          ✅ Dùng <b>CSV UTF‑8</b> (từ Excel). Trang sẽ tự tìm dòng header (thường bắt đầu bằng <span class="mono">STT, …</span>) và bỏ qua phần tiêu đề phía trên.
-        </div>
-        <div class="warnbox">
-          Nếu file có dấu phẩy <span class="mono">,</span> hoặc chấm phẩy <span class="mono">;</span> trang đều tự nhận.
-        </div>
-
-        <h2 style="margin-top:14px">2) Tiêu chí & quy tắc lỗi</h2>
-        <div class="switches">
-          <div class="sw">
-            <input id="xqByService" type="checkbox" checked>
-            <span>Nhận diện X‑quang theo <b>Tên DVKT</b> chứa “x‑quang / xq / x‑ray”</span>
-          </div>
-          <div class="sw">
-            <input id="xqByMachine" type="checkbox" checked>
-            <span>Nhận diện X‑quang theo <b>Mã máy</b> bắt đầu “XQ”</span>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div style="flex:1;min-width:160px">
-            <label>Cảnh báo “thực hiện dưới” (phút)</label>
-            <input id="minMinutes" type="number" value="6" min="1" step="1">
-          </div>
-          <div style="flex:1;min-width:160px">
-            <label>Làm tròn để so trùng (phút)</label>
-            <input id="roundToMin" type="number" value="1" min="1" step="1">
-          </div>
-        </div>
-
-        <div id="diag" class="errbox" style="display:none"></div>
-      </div>
-
-      <div class="card">
-        <div class="actions">
-          <button id="btnRun" class="btn btn-primary" disabled>🔎 PHÂN TÍCH</button>
-          <button id="btnExport" class="btn btn-success" disabled>⬇️ Xuất CSV lỗi</button>
-          <button id="btnClear" class="btn btn-secondary">🧹 Xoá</button>
-          <span class="mono muted">Tip: Ctrl + F để tìm nhanh</span>
-        </div>
-
-        <div class="kpis">
-          <div class="kpi"><div class="t">Tổng dòng đọc</div><div class="v" id="kpiRows">—</div><div class="s mono" id="kpiFile">File: —</div></div>
-          <div class="kpi"><div class="t">Dòng X‑quang</div><div class="v" id="kpiXQ">—</div><div class="s">Theo tiêu chí đang bật</div></div>
-          <div class="kpi"><div class="t">Số lỗi</div><div class="v" id="kpiErrors">—</div><div class="s">Trùng / thời gian ngắn</div></div>
-          <div class="kpi"><div class="t">Loại lỗi</div><div class="v" id="kpiTypes">—</div><div class="s">Số nhóm lỗi</div></div>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-          <div style="flex:2;min-width:260px">
-            <label>Lọc nhanh</label>
-            <input id="q" type="text" placeholder="VD: Trùng thời gian bắt đầu, XQ.2..., tên KTV, mã KCB..." />
-          </div>
-          <div style="flex:1;min-width:200px">
-            <label>Loại lỗi</label>
-            <select id="typeFilter"><option value="">(Tất cả)</option></select>
-          </div>
-          <div style="flex:1;min-width:200px">
-            <label>Sắp xếp</label>
-            <select id="sortBy">
-              <option value="time">Thời gian</option>
-              <option value="type">Loại lỗi</option>
-              <option value="machine">Mã máy → Thời gian</option>
-            </select>
-          </div>
-          <div style="flex:0;min-width:180px">
-            <label>&nbsp;</label>
-            <button id="btnCopySummary" class="btn btn-secondary" style="width:100%">📋 Copy tóm tắt</button>
-          </div>
-        </div>
-
-        <div class="tablewrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th><th>Loại lỗi</th><th>Mô tả</th><th>Mã máy</th><th>Người TH</th><th>Bác sĩ</th>
-                <th>Mã KCB</th><th>DVKT</th><th>BĐ</th><th>KT</th><th>Phút</th><th>Dòng liên quan</th>
-              </tr>
-            </thead>
-            <tbody id="tbody">
-              <tr><td colspan="12" class="muted">Chưa có dữ liệu. Hãy tải <b>CSV</b> và bấm <b>PHÂN TÍCH</b>.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="muted" style="margin-top:8px;font-size:12px">
-          <span class="badge" style="border-color: rgba(14,165,233,.3); background: var(--softBrand); color:#075985">Quy tắc</span>
-          Trùng BĐ: cùng thời điểm bắt đầu (sau làm tròn) và khác mã máy • Trùng KT: cùng thời điểm kết thúc • Thực hiện &lt; ngưỡng phút.
-        </div>
-      </div>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <button id="btnRun" class="btn btn-primary" disabled>🔎 Phân tích</button>
+      <button id="btnCheckXlsx" class="btn btn-outline-primary">🧩 Kiểm tra XLSX</button>
+      <button id="btnExport" class="btn btn-success" disabled>Xuất CSV lỗi</button>
+      <button id="btnClear" class="btn btn-outline-secondary">Xoá kết quả</button>
     </div>
+
+    <div id="diagBox" class="alert alert-warning mt-3 d-none diag"></div>
+    <div id="xlsxStatus" class="mt-2 small text-muted"></div>
   </div>
 
+  <div class="card shadow-sm p-4 mb-3">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="muted">Tổng dòng đọc</div>
+        <div id="kpiRows" class="kpi">—</div>
+      </div>
+      <div class="col-md-3">
+        <div class="muted">Dòng X-quang</div>
+        <div id="kpiXQ" class="kpi">—</div>
+      </div>
+      <div class="col-md-3">
+        <div class="muted">Số lỗi</div>
+        <div id="kpiErrors" class="kpi">—</div>
+      </div>
+      <div class="col-md-3">
+        <div class="muted">Nguồn dữ liệu</div>
+        <div id="kpiSheet" class="kpi">—</div>
+      </div>
+    </div>
+
+    <hr class="my-3">
+
+    <div class="row g-2 align-items-end">
+      <div class="col-lg-5">
+        <label class="form-label">Lọc nhanh</label>
+        <input id="q" class="form-control" placeholder="VD: Trùng Ngày thực hiện YL (cùng mã máy), XQ.2..., tên KTV, mã KCB..." />
+      </div>
+      <div class="col-lg-3">
+        <label class="form-label">Chỉ hiển thị loại lỗi</label>
+        <select id="typeFilter" class="form-select">
+          <option value="">(Tất cả)</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label">Sắp xếp</label>
+        <select id="sortBy" class="form-select">
+          <option value="time">Thời gian</option>
+          <option value="type">Loại lỗi</option>
+          <option value="machine">Mã máy → Thời gian</option>
+        </select>
+      </div>
+      <div class="col-lg-2 d-grid">
+        <button id="btnCopySummary" class="btn btn-outline-primary">Copy tóm tắt</button>
+      </div>
+    </div>
+
+    <div class="table-responsive mt-3" style="max-height:60vh">
+      <table class="table table-sm table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="nowrap">#</th>
+            <th class="nowrap">Loại lỗi</th>
+            <th>Mô tả</th>
+            <th class="nowrap">Mã máy</th>
+            <th class="nowrap">Người TH</th>
+            <th class="nowrap">Bác sĩ</th>
+            <th class="nowrap">Mã KCB</th>
+            <th>DVKT</th>
+            <th class="nowrap">BĐ</th>
+            <th class="nowrap">KT</th>
+            <th class="nowrap">Phút</th>
+            <th class="nowrap">Dòng liên quan</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="12" class="text-muted">Chưa có dữ liệu. Hãy tải file và bấm <b>Phân tích</b>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="./xlsx.full.min.js"></script>
 <script>
-  const $ = (id)=>document.getElementById(id);
-  let fileName="—", allRows=[], xqRows=[], errors=[];
+  const $ = (id) => document.getElementById(id);
 
-  function diag(msg){
-    const d=$("diag");
-    d.style.display = msg ? "block" : "none";
-    d.textContent = msg || "";
+  function showDiag(msg, level="warning"){
+    const box = $("diagBox");
+    box.className = "alert alert-" + (level==="danger" ? "danger" : "warning") + " mt-3 diag";
+    box.textContent = msg;
+    box.classList.remove("d-none");
   }
-  function safe(v){ return v==null ? "" : String(v); }
+  function hideDiag(){ $("diagBox").classList.add("d-none"); $("diagBox").textContent=""; }
 
-  function parseDateLoose(s){
-    if (!s) return null;
-    const t = Date.parse(s);
-    if (!Number.isNaN(t)) return new Date(t);
-    const m = String(s).trim().replace(/\s+/g," ").match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
-    if (m){
-      let d=parseInt(m[1],10), mo=parseInt(m[2],10)-1, y=parseInt(m[3],10);
-      if (y<100) y+=2000;
-      let hh=m[4]?parseInt(m[4],10):0;
-      const mm=m[5]?parseInt(m[5],10):0;
-      const ss=m[6]?parseInt(m[6],10):0;
-      const ap=m[7]?m[7].toUpperCase():null;
-      if (ap==="PM" && hh<12) hh+=12;
-      if (ap==="AM" && hh===12) hh=0;
-      const dt=new Date(y,mo,d,hh,mm,ss);
-      if (!Number.isNaN(dt.getTime())) return dt;
+  function excelNumberToDate(n) {
+    const epoch = Date.UTC(1899, 11, 30);
+    const ms = Math.round(n * 86400000);
+    return new Date(epoch + ms);
+  }
+
+  function toDate(val) {
+    if (val == null || val === "") return null;
+    if (val instanceof Date && !isNaN(val)) return val;
+    if (typeof val === "number" && isFinite(val)) return excelNumberToDate(val);
+    if (typeof val === "string") {
+      const s = val.trim().replace(/\s+/g, " ");
+      const iso = new Date(s);
+      if (!isNaN(iso)) return iso;
+
+      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+      if (m) {
+        let d = parseInt(m[1],10), mo = parseInt(m[2],10)-1, y = parseInt(m[3],10);
+        if (y < 100) y += 2000;
+        let hh = m[4] ? parseInt(m[4],10) : 0;
+        const mm = m[5] ? parseInt(m[5],10) : 0;
+        const ss = m[6] ? parseInt(m[6],10) : 0;
+        const ap = m[7] ? m[7].toUpperCase() : null;
+        if (ap === "PM" && hh < 12) hh += 12;
+        if (ap === "AM" && hh === 12) hh = 0;
+        const dt = new Date(y, mo, d, hh, mm, ss);
+        if (!isNaN(dt)) return dt;
+      }
     }
     return null;
   }
-  function fmt(dt){
+
+  function fmt(dt) {
     if (!dt) return "";
-    try{
-      return new Intl.DateTimeFormat("vi-VN", {
-        timeZone:"Asia/Ho_Chi_Minh",
-        year:"numeric",month:"2-digit",day:"2-digit",
-        hour:"2-digit",minute:"2-digit"
-      }).format(dt);
-    }catch(e){ return dt.toLocaleString(); }
-  }
-  function minutesBetween(a,b){ return Math.round((b.getTime()-a.getTime())/60000); }
-  function bucketTime(dt, roundToMin){
-    if (!dt) return "";
-    const bucket=Math.max(1,roundToMin)*60000;
-    return String(Math.floor(dt.getTime()/bucket)*bucket);
+    try {
+      const f = new Intl.DateTimeFormat("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+      });
+      return f.format(dt);
+    } catch (e) { return dt.toLocaleString(); }
   }
 
-  function parseCSVSmart(text){
+  function safe(v) { return (v==null) ? "" : String(v); }
+  function minutesBetween(a,b) { return Math.round((b.getTime()-a.getTime())/60000); }
+
+  // CSV parsing fallback
+  function parseCSV(text){
     const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l=>l.trim()!=="");
-    if (!lines.length) return {headers:[], rows:[], headerIndex:-1};
+    if (!lines.length) return {headers:[], rows:[]};
+    const head = lines[0];
+    const comma = (head.match(/,/g)||[]).length;
+    const semi = (head.match(/;/g)||[]).length;
+    const tab = (head.match(/\t/g)||[]).length;
+    const delim = tab>0 ? "\t" : (semi>comma ? ";" : ",");
 
-    // delimiter detect from the first "structured" line (most commas/semicolons)
-    let bestIdx=0, bestScore=-1, bestDelim=",";
-    for (let i=0;i<Math.min(50,lines.length);i++){
-      const l=lines[i];
-      const comma=(l.match(/,/g)||[]).length;
-      const semi=(l.match(/;/g)||[]).length;
-      const tab=(l.match(/\t/g)||[]).length;
-      const score=Math.max(comma,semi,tab);
-      if (score>bestScore){ bestScore=score; bestIdx=i; bestDelim= tab>0 ? "\t" : (semi>comma ? ";" : ","); }
-    }
-    const delim = bestDelim;
-
-    const splitLine = (line)=>{
-      const out=[]; let cur="", inQ=false;
+    const splitLine = (line) => {
+      const out = [];
+      let cur="", inQ=false;
       for (let i=0;i<line.length;i++){
         const ch=line[i];
         if (ch === '"'){
           if (inQ && line[i+1] === '"'){ cur+='"'; i++; }
-          else inQ=!inQ;
-        }else if(!inQ && ch===delim){
+          else inQ = !inQ;
+        } else if (!inQ && ch === delim){
           out.push(cur); cur="";
-        }else cur+=ch;
+        } else cur += ch;
       }
       out.push(cur);
       return out.map(s=>s.trim());
     };
 
-    // find header line: contains "Tên DVKT" and (Ngày thực hiện/Ngày vào) and (Ngày kết quả/Ngày ra)
-    let headerIndex=-1;
-    for (let i=0;i<Math.min(200,lines.length);i++){
-      const l = lines[i];
-      const low = l.toLowerCase();
-      const hasTen = low.includes("tên dvkt") || low.includes("ten dvkt") || low.includes("dvkt");
-      const hasStart = low.includes("ngày thực hiện") || low.includes("ngay thuc hien") || low.includes("ngày vào") || low.includes("ngay vao");
-      const hasEnd = low.includes("ngày kết quả") || low.includes("ngay ket qua") || low.includes("ngày ra") || low.includes("ngay ra");
-      if (hasTen && hasStart && hasEnd){
-        headerIndex=i; break;
-      }
-    }
-    if (headerIndex===-1) headerIndex=bestIdx; // fallback
-
-    const headers = splitLine(lines[headerIndex]).map(h=>h.replace(/^\uFEFF/,"").trim());
-    const rows=[];
-    for (let r=headerIndex+1;r<lines.length;r++){
-      const cols=splitLine(lines[r]);
+    const headers = splitLine(lines[0]);
+    const rows = [];
+    for (let r=1;r<lines.length;r++){
+      const cols = splitLine(lines[r]);
       if (cols.every(c=>c==="")) continue;
       rows.push(cols);
     }
-    return {headers, rows, headerIndex};
+    return {headers, rows, delim};
   }
 
-  function normalizeHeader(h){
-    return safe(h).trim().toLowerCase().replace(/\s+/g," ").replace(/[“”"]/g,'"');
-  }
+  function normHeader(h){ return safe(h).trim().toLowerCase().replace(/\s+/g," "); }
   function mapHeaders(headers){
-    const idx={}; headers.forEach((h,i)=>{ idx[normalizeHeader(h)] = i; });
-    const pick=(cands)=>{
+    const idx = {}; headers.forEach((h,i)=> idx[normHeader(h)] = i);
+    const pick = (cands) => {
+      for (const c of cands){ const k=normHeader(c); if (k in idx) return idx[k]; }
       for (const c of cands){
-        const k=normalizeHeader(c);
-        if (k in idx) return idx[k];
-      }
-      for (const c of cands){
-        const k=normalizeHeader(c);
-        for (const key in idx){
-          if (key.includes(k)) return idx[key];
-        }
+        const k=normHeader(c);
+        for (const key in idx){ if (key.includes(k)) return idx[key]; }
       }
       return -1;
     };
     return {
-      ten: pick(["tên dvkt","ten dvkt","dịch vụ kỹ thuật","dvkt"]),
-      maMay: pick(["mã máy","ma may","mamy"]),
-      nguoiTH: pick(["người thực hiện","nguoi thuc hien","người th","ktv"]),
+      ten: pick(["tên dvkt","ten dvkt","dvkt"]),
+      maMay: pick(["mã máy","ma may"]),
+      nguoiTH: pick(["người thực hiện","nguoi thuc hien"]),
       bacSi: pick(["bác sĩ","bac si"]),
       maKCB: pick(["mã kcb","ma kcb"]),
-      // IMPORTANT: accept both variants
-      start: pick(["ngày thực hiện yl","ngày thực hiện","ngay thuc hien yl","ngay thuc hien","ngày vào","ngay vao"]),
-      end: pick(["ngày kết quả","ngay ket qua","ngày ra","ngay ra"])
+      start: pick(["ngày thực hiện yl","ngày thực hiện"]),
+      end: pick(["ngày kết quả"])
     };
   }
 
-  function isXQ(row, byService, byMachine){
-    const ten=safe(row.ten).toLowerCase();
-    const ma=safe(row.maMay).trim().toUpperCase();
-    const okService = byService ? (ten.includes("x-quang")||ten.includes("x quang")||ten.includes("xq")||ten.includes("x-ray")||ten.includes("xray")) : false;
-    const okMachine = byMachine ? ma.startsWith("XQ") : false;
+  function bucketTime(dt, roundToMin) {
+    if (!dt) return "";
+    const bucket = Math.max(1, roundToMin) * 60000;
+    const rounded = Math.floor(dt.getTime() / bucket) * bucket;
+    return String(rounded);
+  }
+
+  
+  function bucketMinute(dt) {
+    if (!dt) return "";
+    // So trùng theo phút để tránh lệch giây (Excel đôi khi có giây ẩn)
+    const minute = 60000;
+    return String(Math.floor(dt.getTime() / minute) * minute);
+  }
+function isXQ(row, byService, byMachine) {
+    const ten = safe(row.ten).toLowerCase();
+    const ma = safe(row.maMay).trim().toUpperCase();
+    const okService = byService ? (ten.includes("x-quang") || ten.includes("x quang") || ten.includes("xq") || ten.includes("x-ray") || ten.includes("xray")) : false;
+    const okMachine = byMachine ? (ma.startsWith("XQ")) : false;
     if (byService && byMachine) return okService || okMachine;
     if (byService) return okService;
     if (byMachine) return okMachine;
     return true;
   }
 
-  function mkErr(type,row,desc,relatedRows=[]){
-    const dur=(row.start && row.end) ? minutesBetween(row.start,row.end) : null;
+  function mkErr(type, row, desc, relatedRows=[]) {
+    const dur = (row.start && row.end) ? minutesBetween(row.start, row.end) : null;
+    const related = relatedRows.length ? relatedRows.map(r=>r.rownum).join(", ") : "";
     return {
       type, desc,
-      maMay: row.maMay, nguoiTH: row.nguoiTH, bacSi: row.bacSi, maKCB: row.maKCB, ten: row.ten,
-      start: row.start, end: row.end, duration: dur,
       rownum: row.rownum,
-      related: relatedRows.map(r=>r.rownum).join(", ")
+      maMay: row.maMay,
+      nguoiTH: row.nguoiTH,
+      bacSi: row.bacSi,
+      maKCB: row.maKCB,
+      ten: row.ten,
+      start: row.start,
+      end: row.end,
+      duration: dur,
+      related
     };
   }
 
-  function analyze(){
-    const minMinutes=Math.max(1, parseInt($("minMinutes").value||"6",10));
-    const roundToMin=Math.max(1, parseInt($("roundToMin").value||"1",10));
-    const byService=$("xqByService").checked;
-    const byMachine=$("xqByMachine").checked;
+  function analyzeXQ(rows, opts) {
+    const errors = [];
+    const roundToMin = Math.max(1, opts.roundToMin);
+    const minM = Math.max(1, opts.minMinutes);
 
-    xqRows = allRows.filter(r=>isXQ(r,byService,byMachine));
-
-    const out=[];
-    // duration short
-    for (const r of xqRows){
-      if (r.start && r.end){
-        const dur=minutesBetween(r.start,r.end);
-        if (dur>=0 && dur<minMinutes){
-          out.push(mkErr("Thực hiện dưới 6 phút", r, `Thời gian thực hiện ${dur} phút < ${minMinutes} phút`, []));
+    for (const r of rows) {
+      if (r.start && r.end) {
+        const dur = minutesBetween(r.start, r.end);
+        if (dur >= 0 && dur < minM) {
+          errors.push(mkErr("Thực hiện dưới 6 phút", r, `Thời gian thực hiện ${dur} phút < ${minM} phút`, []));
         }
       }
     }
-    // duplicate start across different machines
-    const mapStart=new Map();
-    for (const r of xqRows){
+
+    const mapStart = new Map();
+    for (const r of rows) {
       if (!r.start) continue;
-      const key=bucketTime(r.start, roundToMin);
+      const key = bucketMinute(r.start);
       if (!mapStart.has(key)) mapStart.set(key, []);
       mapStart.get(key).push(r);
     }
-    for (const [key,arr] of mapStart.entries()){
-      if (arr.length<2) continue;
-      const machines=new Set(arr.map(x=>safe(x.maMay).trim()).filter(Boolean));
-      if (machines.size>=2){
-        for (const r of arr){
-          const others=arr.filter(x=>x!==r);
-          const otherMachines=Array.from(new Set(others.map(x=>safe(x.maMay).trim()).filter(Boolean))).join(", ");
-          out.push(mkErr("Trùng thời gian bắt đầu", r, `Cùng BĐ (${fmt(r.start)}) nhưng khác máy. Máy khác: ${otherMachines||"(không rõ)"}`, others));
+    for (const [key, arr] of mapStart.entries()) {
+      if (arr.length < 2) continue;
+      const machines = new Set(arr.map(x => safe(x.maMay).trim()).filter(Boolean));
+      if (machines.size >= 2) {
+        for (const r of arr) {
+          const others = arr.filter(x => x !== r);
+          const otherMachines = Array.from(new Set(others.map(x=>safe(x.maMay).trim()).filter(Boolean))).join(", ");
+          const desc = `Trùng Ngày thực hiện YL (${fmt(r.start)}) và cùng mã máy. Máy khác: ${otherMachines || "(không rõ)"}`;
+          errors.push(mkErr("Trùng Ngày thực hiện YL (cùng mã máy)", r, desc, others));
         }
       }
     }
-    // duplicate end time
-    const mapEnd=new Map();
-    for (const r of xqRows){
+
+    const mapEnd = new Map();
+    for (const r of rows) {
       if (!r.end) continue;
-      const key=bucketTime(r.end, roundToMin);
+      const key = bucketMinute(r.end);
       if (!mapEnd.has(key)) mapEnd.set(key, []);
       mapEnd.get(key).push(r);
     }
-    for (const [key,arr] of mapEnd.entries()){
-      if (arr.length<2) continue;
-      for (const r of arr){
-        const others=arr.filter(x=>x!==r);
-        out.push(mkErr("Trùng thời gian kết thúc", r, `Trùng KT (${fmt(r.end)}) với ${others.length} ca khác`, others));
+    for (const [key, arr] of mapEnd.entries()) {
+      if (arr.length < 2) continue;
+      for (const r of arr) {
+        const others = arr.filter(x => x !== r);
+        const desc = `Trùng KT (${fmt(r.end)}) với ${others.length} ca khác`;
+        errors.push(mkErr("Trùng thời gian kết thúc", r, desc, others));
       }
     }
 
-    // dedup
-    const seen=new Set(); const ded=[];
-    for (const e of out){
-      const sig=[e.type,e.rownum,bucketTime(e.start,roundToMin),bucketTime(e.end,roundToMin),e.related].join("|");
+    const seen = new Set();
+    const out = [];
+    for (const e of errors) {
+      const sig = [e.type, e.rownum, bucketMinute(e.start), bucketMinute(e.end), e.related].join("|");
       if (seen.has(sig)) continue;
-      seen.add(sig); ded.push(e);
+      seen.add(sig);
+      out.push(e);
     }
-    errors=ded;
+    return out;
   }
 
-  function updateKPIs(){
-    const types=new Set(errors.map(e=>e.type));
-    $("kpiRows").textContent = allRows.length ? String(allRows.length) : "—";
-    $("kpiXQ").textContent = xqRows.length ? String(xqRows.length) : "—";
-    $("kpiErrors").textContent = String(errors.length || 0);
-    $("kpiTypes").textContent = String(types.size || 0);
-    $("kpiFile").textContent = "File: " + fileName;
+  function setKPIs(rowsCount, xqCount, errors, sourceName) {
+    $("kpiRows").textContent = rowsCount ?? "—";
+    $("kpiXQ").textContent = xqCount ?? "—";
+    $("kpiErrors").textContent = errors ? errors.length : "—";
+    $("kpiSheet").textContent = sourceName ?? "—";
   }
 
-  function escapeHtml(s){ return safe(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
-
-  function fillTypeFilter(){
-    const sel=$("typeFilter");
-    const cur=sel.value;
-    const types=Array.from(new Set(errors.map(e=>e.type))).sort();
-    sel.innerHTML = '<option value="">(Tất cả)</option>' + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
-    sel.value=cur;
+  function fillTypeFilter(errors) {
+    const sel = $("typeFilter");
+    const cur = sel.value;
+    const types = Array.from(new Set(errors.map(e=>e.type))).sort();
+    sel.innerHTML = `<option value="">(Tất cả)</option>` + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+    sel.value = cur;
   }
 
-  function render(){
-    const q=$("q").value.trim().toLowerCase();
-    const typeF=$("typeFilter").value;
-    const sortBy=$("sortBy").value;
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  }
 
-    let items=errors.slice();
-    if (typeF) items=items.filter(e=>e.type===typeF);
-    if (q){
-      items=items.filter(e=>{
-        const blob=[e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.rownum,e.related].join(" ").toLowerCase();
+  function render(errors) {
+    const q = $("q").value.trim().toLowerCase();
+    const typeF = $("typeFilter").value;
+    const sortBy = $("sortBy").value;
+
+    let items = errors.slice();
+    if (typeF) items = items.filter(e=>e.type===typeF);
+    if (q) {
+      items = items.filter(e => {
+        const blob = [e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.rownum,e.related].join(" ").toLowerCase();
         return blob.includes(q);
       });
     }
-    if (sortBy==="type") items.sort((a,b)=>a.type.localeCompare(b.type) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
-    else if (sortBy==="machine") items.sort((a,b)=>safe(a.maMay).localeCompare(safe(b.maMay)) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
+
+    if (sortBy === "type") items.sort((a,b)=>a.type.localeCompare(b.type) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
+    else if (sortBy === "machine") items.sort((a,b)=>safe(a.maMay).localeCompare(safe(b.maMay)) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
     else items.sort((a,b)=>(a.start?.getTime()||0)-(b.start?.getTime()||0));
 
-    const tb=$("tbody");
-    if (!items.length){
-      tb.innerHTML = `<tr><td colspan="12" class="muted">Không có lỗi theo bộ lọc hiện tại.</td></tr>`;
+    const tb = $("tbody");
+    if (!items.length) {
+      tb.innerHTML = `<tr><td colspan="12" class="text-muted">Không có lỗi theo bộ lọc hiện tại.</td></tr>`;
       return;
     }
-    tb.innerHTML = items.map((e,i)=>`
-      <tr class="err">
-        <td class="mono">${i+1}</td>
-        <td><span class="badge">${escapeHtml(e.type)}</span></td>
+
+    tb.innerHTML = items.map((e, idx) => `
+      <tr class="rowerr">
+        <td class="nowrap">${idx+1}</td>
+        <td class="nowrap"><span class="badge text-bg-warning">${escapeHtml(e.type)}</span></td>
         <td>${escapeHtml(e.desc)}</td>
-        <td class="mono">${escapeHtml(e.maMay)}</td>
-        <td>${escapeHtml(e.nguoiTH)}</td>
-        <td>${escapeHtml(e.bacSi)}</td>
-        <td class="mono">${escapeHtml(e.maKCB)}</td>
-        <td>${escapeHtml(e.ten)}</td>
-        <td class="mono">${escapeHtml(fmt(e.start))}</td>
-        <td class="mono">${escapeHtml(fmt(e.end))}</td>
-        <td class="mono">${e.duration==null ? "" : e.duration}</td>
-        <td class="mono">${escapeHtml(e.related || "")}</td>
-      </tr>`).join("");
+        <td class="nowrap">${escapeHtml(safe(e.maMay))}</td>
+        <td class="nowrap">${escapeHtml(safe(e.nguoiTH))}</td>
+        <td class="nowrap">${escapeHtml(safe(e.bacSi))}</td>
+        <td class="nowrap">${escapeHtml(safe(e.maKCB))}</td>
+        <td>${escapeHtml(safe(e.ten))}</td>
+        <td class="nowrap">${escapeHtml(fmt(e.start))}</td>
+        <td class="nowrap">${escapeHtml(fmt(e.end))}</td>
+        <td class="nowrap">${e.duration==null ? "" : e.duration}</td>
+        <td class="nowrap">${e.related ? `Liên quan dòng: ${escapeHtml(e.related)}` : ""}</td>
+      </tr>
+    `).join("");
   }
 
-  function exportCSV(){
-    const headers=["LoaiLoi","MoTa","MaMay","NguoiTH","BacSi","MaKCB","TenDVKT","BatDau","KetThuc","Phut","Dong","DongLienQuan"];
-    const rows=errors.map(e=>[
-      e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.duration??"",e.rownum??"",e.related??""
-    ].map(v=>`"${safe(v).replace(/"/g,'""')}"`).join(","));
-    const csv=headers.join(",")+"\n"+rows.join("\n");
-    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    a.href=url; a.download=`loi_xquang_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+  function exportCSV(errors) {
+    const headers = ["LoaiLoi","MoTa","MaMay","NguoiTH","BacSi","MaKCB","TenDVKT","BatDau","KetThuc","Phut","Dong","DongLienQuan"];
+    const rows = errors.map(e => [
+      e.type, e.desc, e.maMay, e.nguoiTH, e.bacSi, e.maKCB, e.ten, fmt(e.start), fmt(e.end),
+      e.duration ?? "", e.rownum ?? "", e.related ?? ""
+    ].map(v => `"${String(v??"").replace(/"/g,'""')}"`).join(","));
+    const csv = headers.join(",") + "\n" + rows.join("\n");
+    const BOM = "\uFEFF"; // UTF-8 BOM để Excel hiển thị tiếng Việt đúng
+    const blob = new Blob([BOM + csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `loi_xquang_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  async function handleFile(f){
-    diag("");
-    fileName = f?.name || "—";
-    $("btnRun").disabled = true;
-    $("btnRun").title = "Đang tải dữ liệu…";
+  let allRows = [];
+  let xqRows = [];
+  let analyzedErrors = [];
+  let sourceName = "—";
+  let selectedFile = null;
 
-    if (!f){ diag("Chưa chọn file."); return; }
+  function canReadExcel(){ return typeof XLSX !== "undefined"; }
 
-    try{
+  async function loadDataFromFile(f){
+    hideDiag();
+    selectedFile = f;
+    allRows = []; xqRows = []; analyzedErrors = [];
+    $("btnExport").disabled = true;
+    $("tbody").innerHTML = `<tr><td colspan="12" class="text-muted">Đã tải file. Bấm <b>Phân tích</b> để xử lý…</td></tr>`;
+
+    if (!f){ $("btnRun").disabled = true; return; }
+
+    const name = f.name || "—";
+    const ext = name.split(".").pop().toLowerCase();
+
+    if (ext === "csv" || ext === "txt" || ext === "tsv"){
       const text = await f.text();
-      const parsed = parseCSVSmart(text);
-      if (!parsed.headers.length){ diag("Không đọc được header trong CSV."); return; }
-
+      const parsed = parseCSV(text);
       const col = mapHeaders(parsed.headers);
 
-      const missing=[];
-      if (col.start<0) missing.push("Ngày thực hiện/Ngày vào");
-      if (col.end<0) missing.push("Ngày kết quả/Ngày ra");
-      if (col.ten<0) missing.push("Tên DVKT");
-      if (col.maMay<0) missing.push("Mã máy");
+      const missing = [];
+      if (col.start < 0) missing.push("Ngày thực hiện YL");
+      if (col.end < 0) missing.push("Ngày kết quả");
+      if (col.ten < 0) missing.push("Tên DVKT");
+      if (col.maMay < 0) missing.push("Mã máy");
       if (missing.length){
-        diag("Không nhận diện được cột bắt buộc: " + missing.join(", ") +
-             "\n\nGợi ý: kiểm tra dòng header trong file CSV (thường bắt đầu bằng 'STT').");
+        showDiag("CSV thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra hàng tiêu đề giống Sheet1.", "danger");
+        $("btnRun").disabled = true;
         return;
       }
 
-      allRows = parsed.rows.map((r,idx)=>({
-        rownum: (parsed.headerIndex + 2) + idx, // approximate: header line is 0-based
-        ten: r[col.ten] ?? "",
-        maMay: r[col.maMay] ?? "",
-        nguoiTH: col.nguoiTH>=0 ? (r[col.nguoiTH] ?? "") : "",
-        bacSi: col.bacSi>=0 ? (r[col.bacSi] ?? "") : "",
-        maKCB: col.maKCB>=0 ? (r[col.maKCB] ?? "") : "",
-        start: parseDateLoose(r[col.start]),
-        end: parseDateLoose(r[col.end]),
+      allRows = parsed.rows.map((cols, idx)=>({
+        rownum: idx+2,
+        ten: cols[col.ten] ?? "",
+        maMay: cols[col.maMay] ?? "",
+        nguoiTH: col.nguoiTH>=0 ? (cols[col.nguoiTH] ?? "") : "",
+        bacSi: col.bacSi>=0 ? (cols[col.bacSi] ?? "") : "",
+        maKCB: col.maKCB>=0 ? (cols[col.maKCB] ?? "") : "",
+        start: toDate(cols[col.start]),
+        end: toDate(cols[col.end]),
       }));
 
+      sourceName = "CSV: " + name;
+      setKPIs(allRows.length, "—", [], sourceName);
       $("btnRun").disabled = false;
-      $("btnRun").title = "Sẵn sàng phân tích";
-      updateKPIs();
-    }catch(err){
-      diag("Không đọc được file. Chi tiết: " + (err?.message || String(err)));
+      return;
+    }
+
+    if ((ext==="xlsx" || ext==="xls") && !canReadExcel()){
+      showDiag("Không tải được thư viện XLSX từ CDN (mạng có thể chặn). \n➡️ Cách xử lý: Excel → Save As → CSV UTF-8 → tải CSV vào trang này.", "danger");
+      $("btnRun").disabled = true;
+      return;
+    }
+
+    if (ext==="xlsx" || ext==="xls"){
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, {type:"array", cellDates:true, raw:true});
+      const sheetName = (wb.SheetNames.includes("Sheet1") ? "Sheet1" : wb.SheetNames[0]);
+      const ws = wb.Sheets[sheetName];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, raw: true, defval: null});
+
+      // find header row
+      let headerRowIdx = -1;
+      for (let r=0;r<Math.min(120, aoa.length);r++){
+        const joined = (aoa[r]||[]).map(x=>safe(x)).join(" | ");
+        if (joined.includes("Ngày thực hiện") && joined.includes("Ngày kết quả")) { headerRowIdx = r; break; }
+      }
+      if (headerRowIdx === -1) headerRowIdx = 0;
+
+      const headers = (aoa[headerRowIdx]||[]).map(h=>safe(h).trim());
+      const col = mapHeaders(headers);
+
+      const missing = [];
+      if (col.start < 0) missing.push("Ngày thực hiện YL");
+      if (col.end < 0) missing.push("Ngày kết quả");
+      if (col.ten < 0) missing.push("Tên DVKT");
+      if (col.maMay < 0) missing.push("Mã máy");
+      if (missing.length){
+        showDiag("Excel thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra header trong Sheet1.", "danger");
+        $("btnRun").disabled = true;
+        return;
+      }
+
+      const rows = [];
+      for (let r=headerRowIdx+1; r<aoa.length; r++){
+        const row = aoa[r] || [];
+        const nonEmpty = row.some(v => v!=null && safe(v).trim()!=="");
+        if (!nonEmpty) continue;
+        rows.push({row, rownum: r+1});
+      }
+
+      allRows = rows.map((it)=>({
+        rownum: it.rownum,
+        ten: it.row[col.ten] ?? "",
+        maMay: it.row[col.maMay] ?? "",
+        nguoiTH: col.nguoiTH>=0 ? (it.row[col.nguoiTH] ?? "") : "",
+        bacSi: col.bacSi>=0 ? (it.row[col.bacSi] ?? "") : "",
+        maKCB: col.maKCB>=0 ? (it.row[col.maKCB] ?? "") : "",
+        start: toDate(it.row[col.start]),
+        end: toDate(it.row[col.end]),
+      }));
+
+      sourceName = `Excel: ${name} / ${sheetName}`;
+      setKPIs(allRows.length, "—", [], sourceName);
+      $("btnRun").disabled = false;
+      return;
+    }
+
+    showDiag("Định dạng file chưa hỗ trợ. Hãy dùng .xlsx hoặc .csv", "danger");
+    $("btnRun").disabled = true;
+  }
+
+  function runAnalysis(){
+    hideDiag();
+    if (!selectedFile || allRows.length===0){
+      showDiag("Chưa có dữ liệu để phân tích. Hãy chọn file trước.", "danger");
+      return;
+    }
+
+    const byService = $("xqByService").checked;
+    const byMachine = $("xqByMachine").checked;
+    xqRows = allRows.filter(r => isXQ(r, byService, byMachine));
+
+    const opts = {
+      minMinutes: parseInt($("minMinutes").value || "6", 10),
+      roundToMin: parseInt($("roundToMin").value || "1", 10),
+    };
+
+    analyzedErrors = analyzeXQ(xqRows, opts);
+    setKPIs(allRows.length, xqRows.length, analyzedErrors, sourceName);
+    fillTypeFilter(analyzedErrors);
+    $("btnExport").disabled = analyzedErrors.length === 0;
+    render(analyzedErrors);
+
+    if (xqRows.length === 0){
+      showDiag("Không tìm thấy dòng X-quang theo tiêu chí đang bật. Hãy thử bật cả 2 tiêu chí hoặc kiểm tra Tên DVKT/Mã máy trong file.", "warning");
     }
   }
 
-  $("file").addEventListener("change", (e)=>handleFile(e.target.files?.[0]));
-
-  $("btnRun").addEventListener("click", ()=>{
-    try{
-      diag("");
-      analyze();
-      updateKPIs();
-      fillTypeFilter();
-      render();
-      $("btnExport").disabled = errors.length===0;
-      if (xqRows.length===0){
-        diag("Không tìm thấy dòng X‑quang theo tiêu chí đang bật.\nHãy thử bật cả 2 tiêu chí hoặc kiểm tra Tên DVKT/Mã máy trong dữ liệu.");
-      }
-    }catch(err){
-      diag("Phân tích thất bại. Chi tiết:\n" + (err?.stack || err?.message || String(err)));
-    }
-  });
-
-  $("btnExport").addEventListener("click", exportCSV);
+  $("file").addEventListener("change", async (ev)=>{ await loadDataFromFile(ev.target.files?.[0]); });
+  $("btnRun").addEventListener("click", runAnalysis);
+  $("btnExport").addEventListener("click", ()=>{ if(analyzedErrors.length) exportCSV(analyzedErrors); });
 
   $("btnClear").addEventListener("click", ()=>{
+    selectedFile=null; allRows=[]; xqRows=[]; analyzedErrors=[]; sourceName="—";
     $("file").value="";
-    fileName="—"; allRows=[]; xqRows=[]; errors=[];
-    $("btnRun").disabled=true; $("btnRun").title="Chọn CSV trước";
-    $("btnExport").disabled=true;
-    $("q").value=""; $("typeFilter").innerHTML='<option value="">(Tất cả)</option>';
-    $("tbody").innerHTML='<tr><td colspan="12" class="muted">Chưa có dữ liệu. Hãy tải <b>CSV</b> và bấm <b>PHÂN TÍCH</b>.</td></tr>';
-    $("kpiRows").textContent="—"; $("kpiXQ").textContent="—"; $("kpiErrors").textContent="—"; $("kpiTypes").textContent="—"; $("kpiFile").textContent="File: —";
-    diag("");
+    $("tbody").innerHTML = `<tr><td colspan="12" class="text-muted">Chưa có dữ liệu. Hãy tải file và bấm <b>Phân tích</b>.</td></tr>`;
+    $("typeFilter").innerHTML = `<option value="">(Tất cả)</option>`;
+    $("q").value = "";
+    setKPIs(null, null, null, "—");
+    $("btnExport").disabled = true;
+    $("btnRun").disabled = true;
+    hideDiag();
   });
 
-  ["q","typeFilter","sortBy","minMinutes","roundToMin","xqByService","xqByMachine"].forEach(id=>{
-    $(id).addEventListener("input", ()=>{ if(errors.length) render(); });
-    $(id).addEventListener("change", ()=>{ if(errors.length){ analyze(); updateKPIs(); fillTypeFilter(); render(); $("btnExport").disabled = errors.length===0; } });
+  ["q","typeFilter","sortBy"].forEach(id => {
+    $(id).addEventListener("input", ()=>render(analyzedErrors));
+    $(id).addEventListener("change", ()=>render(analyzedErrors));
   });
 
   $("btnCopySummary").addEventListener("click", async ()=>{
-    const counts={}; for (const e of errors) counts[e.type]=(counts[e.type]||0)+1;
-    const summary=[
-      `File: ${fileName}`,
+    const types = {};
+    for (const e of analyzedErrors) types[e.type] = (types[e.type]||0)+1;
+    const summary = [
+      `${sourceName}`,
       `Tổng dòng: ${allRows.length}`,
-      `Dòng X‑quang: ${xqRows.length}`,
-      `Tổng lỗi: ${errors.length}`,
-      `Phân loại: ` + Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${t}: ${n}`).join(", ")
+      `Dòng X-quang: ${xqRows.length}`,
+      `Tổng lỗi: ${analyzedErrors.length}`,
+      `Phân loại: ` + Object.entries(types).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${t}: ${n}`).join(", ")
     ].join("\n");
     try{ await navigator.clipboard.writeText(summary);
-      $("btnCopySummary").textContent="✅ Đã copy";
-      setTimeout(()=>$("btnCopySummary").textContent="📋 Copy tóm tắt", 1200);
-    }catch(e){ diag("Không copy được. Tóm tắt:\n\n"+summary); }
+      $("btnCopySummary").textContent="Đã copy ✔";
+      setTimeout(()=>$("btnCopySummary").textContent="Copy tóm tắt", 1200);
+    }catch(e){ showDiag(summary, "warning"); }
+  });
+
+  
+  function setXlsxStatus(){
+    const el = $("xlsxStatus");
+    const ok = (typeof XLSX !== "undefined");
+    el.innerHTML = ok
+      ? `✅ Thư viện <b>XLSX</b>: <span style="color:#16a34a;font-weight:700">OK</span> (đọc được .xlsx)`
+      : `❌ Thư viện <b>XLSX</b>: <span style="color:#dc2626;font-weight:700">FAIL</span> (không tải được <span class="smallcode">xlsx.full.min.js</span>).<br>➡️ Đặt file <b>xlsx.full.min.js</b> cùng thư mục với HTML hoặc dùng CSV.`;
+    return ok;
+  }
+
+  $("btnCheckXlsx").addEventListener("click", ()=>{
+    const ok = setXlsxStatus();
+    if(ok) hideDiag();
+    else showDiag("Không thấy thư viện XLSX. Hãy đảm bảo file xlsx.full.min.js nằm cùng thư mục với index.html (Cách 2).", "danger");
+  });
+
+// Startup hint
+  window.addEventListener("load", ()=>{
+    setXlsxStatus();
+    if (!canReadExcel()){
+      showDiag("Lưu ý: Không tải được thư viện XLSX từ CDN. Bạn vẫn có thể dùng file CSV (Excel → Save As → CSV UTF-8).", "warning");
+    }
   });
 </script>
 </body>
