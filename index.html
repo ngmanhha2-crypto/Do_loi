@@ -1869,6 +1869,7 @@ for (const [key, arr] of mapStart.entries()) {
 
 
 <script>
+  function $id(x){ return document.getElementById(x); }
   // ===== Fix suggestion engine (near-original, within bounds, avoids 3 errors) =====
   let __fixState = { list: [], idx: 0, rownum: null };
 
@@ -1974,17 +1975,16 @@ return false;
     }
 
     cand.sort((a,b)=>a.score - b.score);
-    return { list: cand.slice(0, 15), note: note.join("
-") };
+    return { list: cand.slice(0, 15), note: note.join("\n") };
   }
 
   function openFixModal(){ 
-    document.getElementById("fixBackdrop").style.display = "block";
-    document.getElementById("fixModal").style.display = "block";
+    if($id("fixBackdrop")) $id("fixBackdrop").style.display = "block";
+    if($id("fixModal")) $id("fixModal").style.display = "block";
   }
   function closeFixModal(){
-    document.getElementById("fixBackdrop").style.display = "none";
-    document.getElementById("fixModal").style.display = "none";
+    if($id("fixBackdrop")) $id("fixBackdrop").style.display = "none";
+    if($id("fixModal")) $id("fixModal").style.display = "none";
   }
 
   function fmtLocal(dt){
@@ -2051,9 +2051,17 @@ return false;
       if(m) rownum = parseInt(m[1],10);
     }
     const errtype = tr.getAttribute("data-errtype") || "";
-    if(!rownum || !window.__rowIndex) return;
+    if(!rownum) return;
+    if(!window.__rowIndex){
+      window.__rowIndex = new Map();
+      if(Array.isArray(window.xqRows)) for(const r of window.xqRows){ window.__rowIndex.set(r.rownum, r); }
+    }
 
-    const row = window.__rowIndex.get(rownum);
+    let row = window.__rowIndex.get(rownum);
+    if(!row){
+      try{ if(typeof rebuildRowIndex==='function') rebuildRowIndex(); }catch(e){}
+      row = window.__rowIndex.get(rownum);
+    }
     if(!row) return;
 
     const boundsText = `> Ngày y lệnh: ${fmtLocal(row.ylenh)}  |  < Ngày ra: ${fmtLocal(row.ngayRa)}`;
@@ -2072,17 +2080,17 @@ return false;
   });
 
   // Buttons
-  document.getElementById("btnFixClose").addEventListener("click", closeFixModal);
-  document.getElementById("btnFixClose2").addEventListener("click", closeFixModal);
-  document.getElementById("fixBackdrop").addEventListener("click", closeFixModal);
+  if($id("btnFixClose")) $id("btnFixClose").addEventListener("click", closeFixModal);
+  if($id("btnFixClose2")) $id("btnFixClose2").addEventListener("click", closeFixModal);
+  if($id("fixBackdrop")) $id("fixBackdrop").addEventListener("click", closeFixModal);
 
-  document.getElementById("btnFixNext").addEventListener("click", ()=>{
+  if($id("btnFixNext")) $id("btnFixNext").addEventListener("click", ()=>{
     if(!__fixState.list.length) return;
     __fixState.idx = (__fixState.idx + 1) % __fixState.list.length;
     renderFix();
   });
 
-  document.getElementById("btnFixCopy").addEventListener("click", async ()=>{
+  if($id("btnFixCopy")) $id("btnFixCopy").addEventListener("click", async ()=>{
     if(!__fixState.list.length) return;
     const s = __fixState.list[__fixState.idx];
     const txt = `DeXuatThoiGian
@@ -2108,7 +2116,12 @@ Phút: ${s.dur}`;
       if(m && m.style.display === "block") closeFixModal();
     }
   });
+
+
 </script>
+
+
+
 
 </body>
 </html>
