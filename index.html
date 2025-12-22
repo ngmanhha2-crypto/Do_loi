@@ -297,6 +297,178 @@ h1,h2,h3,h4,h5{
 }
 /* ===== End Hospital Light Theme ===== */
 
+
+/* ===== VISIBILITY HOTFIX (Hospital Light) ===== */
+body, .container, .card {
+  color:#0f172a !important;
+}
+
+label, .form-label, .section-title, .card-title {
+  color:#0f172a !important;
+  font-weight:600;
+}
+
+.form-text, .muted, .text-muted {
+  color:#334155 !important; /* slate-700 */
+}
+
+input, select, textarea, .form-control, .form-select {
+  color:#0f172a !important;
+  background:#ffffff !important;
+}
+
+::placeholder {
+  color:#64748b !important; /* slate-500 */
+  opacity:1;
+}
+
+.form-check-label {
+  color:#0f172a !important;
+}
+
+.kpi, .kpi-value {
+  color:#0f172a !important;
+  font-weight:700;
+}
+
+.table th {
+  color:#0f172a !important;
+  font-weight:700;
+}
+.table td {
+  color:#020617 !important;
+}
+
+.badge, .chip {
+  color:#020617 !important;
+}
+
+.btn {
+  font-weight:600;
+}
+.btn-primary {
+  color:#ffffff !important;
+}
+.btn-success {
+  color:#ffffff !important;
+}
+.btn-outline-primary,
+.btn-outline-secondary {
+  color:#1e3a8a !important;
+  border-color:#93c5fd !important;
+}
+
+/* KPI dashes visibility */
+.kpi::before, .kpi::after {
+  color:#020617 !important;
+}
+/* ===== END HOTFIX ===== */
+
+
+/* ===== CLEAR TOGGLE SWITCH (Hospital UI) ===== */
+.form-check.form-switch{
+  padding-left: 3.2rem;
+}
+
+.form-check-input{
+  width: 3.2rem;
+  height: 1.7rem;
+  background-color:#e5e7eb; /* xám nhạt khi OFF */
+  border:2px solid #94a3b8;
+  cursor:pointer;
+}
+
+.form-check-input:checked{
+  background-color:#16a34a; /* xanh khi ON */
+  border-color:#15803d;
+}
+
+.form-check-input:focus{
+  box-shadow:0 0 0 .2rem rgba(22,163,74,.25);
+}
+
+.form-check-input::before{
+  content:"";
+  position:absolute;
+  width:1.3rem;
+  height:1.3rem;
+  border-radius:50%;
+  background:#ffffff;
+  top:0.15rem;
+  left:0.2rem;
+  transition:transform .2s ease;
+}
+
+.form-check-input:checked::before{
+  transform:translateX(1.4rem);
+}
+
+.form-check-label{
+  font-weight:600;
+  color:#0f172a !important;
+  cursor:pointer;
+}
+
+.form-check-input:not(:checked) + .form-check-label{
+  color:#475569 !important;
+}
+/* ===== END TOGGLE ===== */
+
+
+/* ===== BV RADIO-CHECKBOX (centered + pulse 0.2s) ===== */
+.bv-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid #c7d2fe;
+  background:#f8fafc;
+  cursor:pointer;
+  user-select:none;
+}
+.bv-check input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+.bv-mark{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:2px solid #16a34a;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 22px;
+}
+.bv-mark::after{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#16a34a;
+  transform:scale(0);
+  transition:transform .15s ease;
+}
+.bv-check input:checked + .bv-mark::after{
+  transform:scale(1);
+}
+.bv-label-text{
+  color:#0f172a;
+  font-weight:600;
+}
+
+/* pulse 0.2s */
+@keyframes bvPulse{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(22,163,74,0);}
+  50%{transform:scale(1.08);box-shadow:0 0 0 6px rgba(22,163,74,.25);}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(22,163,74,0);}
+}
+.bv-mark.pulse{animation:bvPulse .2s ease-out;}
+/* ===== END BV RADIO-CHECKBOX ===== */
+
 </style>
 </head>
 
@@ -345,16 +517,19 @@ h1,h2,h3,h4,h5{
 
           <div class="col-12">
             <label class="form-label">Tiêu chí nhận diện ca X-quang</label>
-            <div class="switchline">
-              <div class="form-check form-switch m-0">
-                <input class="form-check-input" type="checkbox" id="xqByService" checked>
-                <label class="form-check-label" for="xqByService">Tên DVKT chứa “x-quang / xq”</label>
-              </div>
-              <div class="form-check form-switch m-0">
-                <input class="form-check-input" type="checkbox" id="xqByMachine" checked>
-                <label class="form-check-label" for="xqByMachine">Mã máy bắt đầu bằng “XQ”</label>
-              </div>
-            </div>
+            <div class="d-flex flex-column gap-2">
+  <label class="bv-check">
+    <input type="checkbox" id="xqByService" checked>
+    <span class="bv-mark" aria-hidden="true"></span>
+    <span class="bv-label-text">Tên DVKT chứa “x-quang / xq”</span>
+  </label>
+
+  <label class="bv-check">
+    <input type="checkbox" id="xqByMachine" checked>
+    <span class="bv-mark" aria-hidden="true"></span>
+    <span class="bv-label-text">Mã máy bắt đầu bằng “XQ”</span>
+  </label>
+</div>
           </div>
 
           <div class="col-12">
@@ -383,7 +558,7 @@ h1,h2,h3,h4,h5{
                 <div class="form-text">Giờ kết thúc (BĐ ≤ giờ này)</div>
               </div>
             </div>
-            <div class="form-text mt-1">Áp dụng theo <b>BĐ</b>. Trùng BĐ chỉ báo lỗi khi <b>khác Mã máy</b>. Trùng KT luôn là lỗi.</div>
+            <div class="form-text mt-1">Áp dụng theo <b>BĐ</b>. Trùng BĐ chỉ báo lỗi khi <b>trùng Mã máy</b>. Trùng KT luôn là lỗi.</div>
           </div>
 
           <div class="col-md-6">
@@ -600,7 +775,7 @@ h1,h2,h3,h4,h5{
     const $ = (id) => document.getElementById(id);
 
     // ====== CONFIG: 3 lỗi chuẩn BV ======
-    const ERR_START_DIFF_MACHINE = "TRÙNG BĐ (KHÁC MÁY)";
+    const ERR_START_DIFF_MACHINE = "TRÙNG BĐ (CÙNG MÁY)";
     const ERR_END_ANY            = "TRÙNG KT";
     const ERR_DUR_LT_6           = "TH < 6P";
     const ALLOWED_TYPES = [ERR_START_DIFF_MACHINE, ERR_END_ANY, ERR_DUR_LT_6];
@@ -620,18 +795,18 @@ h1,h2,h3,h4,h5{
     function excelNumberToDate(n) {
       const epoch = Date.UTC(1899, 11, 30);
       const ms = Math.round(n * 86400000);
-      return new Date(epoch + ms);
+      return normalizeToMinute(new Date(epoch + ms));
     }
 
     function toDate(val) {
       if (val == null || val === "") return null;
-      if (val instanceof Date && !isNaN(val)) return val;
+      if (val instanceof Date && !isNaN(val)) return normalizeToMinute(val);
       if (typeof val === "number" && isFinite(val)) return excelNumberToDate(val);
 
       if (typeof val === "string") {
         const s = val.trim().replace(/\s+/g, " ");
         const iso = new Date(s);
-        if (!isNaN(iso)) return iso;
+        if (!isNaN(iso)) return normalizeToMinute(iso);
 
         const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
         if (m) {
@@ -644,7 +819,7 @@ h1,h2,h3,h4,h5{
           if (ap === "PM" && hh < 12) hh += 12;
           if (ap === "AM" && hh === 12) hh = 0;
           const dt = new Date(y, mo, d, hh, mm, ss);
-          if (!isNaN(dt)) return dt;
+          if (!isNaN(dt)) return normalizeToMinute(dt);
         }
       }
       return null;
@@ -680,6 +855,14 @@ h1,h2,h3,h4,h5{
 
     function safe(v) { return (v==null) ? "" : String(v); }
     function minutesBetween(a,b) { return Math.round((b.getTime()-a.getTime())/60000); }
+
+    // Chuẩn hoá thời gian về đúng phút để khớp Excel (loại bỏ lệch do giây/ mili-giây ẩn)
+    // Excel/nguồn HIS đôi khi có giây, hoặc hiển thị làm tròn; nếu không chuẩn hoá sẽ lệch 1 phút.
+    function normalizeToMinute(dt){
+      if (!dt) return normalizeToMinute(dt);
+      const t = dt.getTime();
+      return new Date(Math.round(t / 60000) * 60000); // làm tròn về phút gần nhất
+    }
 
     function parseCSV(text){
       const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l=>l.trim()!=="");
@@ -833,7 +1016,7 @@ h1,h2,h3,h4,h5{
         }
       }
 
-      // (1) TRÙNG BĐ (KHÁC MÁY): same minute start AND different machine
+      // (1) TRÙNG BĐ (CÙNG MÁY): cùng phút BĐ + TRÙNG Mã máy mới là lỗi
       const mapStart = new Map();
       for (const r of rows) {
         if (!r.start) continue;
@@ -847,17 +1030,15 @@ h1,h2,h3,h4,h5{
 
         for (const r of arr) {
           const m0 = safe(r.maMay).trim().toUpperCase();
-          const othersDiffMachine = arr.filter(x =>
-            x !== r && safe(x.maMay).trim().toUpperCase() !== m0
+          // Chỉ tính lỗi khi có dòng khác cùng phút và CÙNG Mã máy
+          const othersSameMachine = arr.filter(x =>
+            x !== r && safe(x.maMay).trim().toUpperCase() === m0 && m0 !== ""
           );
-          if (!othersDiffMachine.length) continue;
 
-          const otherMachines = Array.from(
-            new Set(othersDiffMachine.map(x => safe(x.maMay).trim()).filter(Boolean))
-          ).join(", ");
+          if (!othersSameMachine.length) continue;
 
-          const desc = `Trùng BĐ (${fmt(r.start)}) nhưng khác máy: ${otherMachines || "(không rõ)"}`;
-          errors.push(mkErr(ERR_START_DIFF_MACHINE, r, desc, othersDiffMachine));
+          const desc = `Trùng BĐ (${fmt(r.start)}) và trùng Mã máy: ${m0}`;
+          errors.push(mkErr(ERR_START_DIFF_MACHINE, r, desc, othersSameMachine));
         }
       }
 
@@ -1182,7 +1363,7 @@ h1,h2,h3,h4,h5{
         {ThongTin:"Đến ngày", GiaTri: String($("toDate").value || "(không)")},
         {ThongTin:"Giờ từ", GiaTri: String($("fromTime").value || "00:00")},
         {ThongTin:"Giờ đến", GiaTri: String($("toTime").value || "23:59")},
-        {ThongTin:"Quy tắc", GiaTri: "Trùng BĐ chỉ lỗi khi khác máy; Trùng KT luôn lỗi; TH < 6P"}
+        {ThongTin:"Quy tắc", GiaTri: "Trùng BĐ chỉ lỗi khi trùng Mã máy; Trùng KT luôn lỗi; TH < 6P"}
       ];
 
       const byMachine = Object.entries(machineCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({MaMay:k, SoLoi:v}));
@@ -1471,5 +1652,23 @@ h1,h2,h3,h4,h5{
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // bindPulseBVCheckboxes: pulse 0.2s mỗi lần tick/bỏ tick
+  function bindPulseBVCheckboxes(){
+    document.querySelectorAll(".bv-check input[type='checkbox']").forEach(cb=>{
+      cb.addEventListener("change", ()=>{
+        const mark = cb.nextElementSibling; // .bv-mark
+        if(!mark) return;
+        mark.classList.remove("pulse");
+        void mark.offsetWidth; // force reflow
+        mark.classList.add("pulse");
+        setTimeout(()=>mark.classList.remove("pulse"), 200);
+      });
+    });
+  }
+  bindPulseBVCheckboxes();
+</script>
+
 </body>
 </html>
