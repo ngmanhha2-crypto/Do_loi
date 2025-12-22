@@ -13,7 +13,7 @@
       --card: rgba(255,255,255,.08);
       --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
+      --muted: rgba(255,255,255,.72);
       --accent: #5eead4;
       --accent2:#60a5fa;
       --warn: #fbbf24;
@@ -183,7 +183,121 @@
       .table-responsive{max-height:none!important;}
       a[href]:after{content:"";}
     }
-  </style>
+  
+    /* Contrast fixes */
+    .text-muted{color:rgba(255,255,255,.72)!important;}
+    .small-muted{color:rgba(255,255,255,.74)!important;}
+    .section-title .hint{color:rgba(255,255,255,.74)!important;}
+    .form-text{color:rgba(255,255,255,.70)!important;}
+    .chip{color:rgba(255,255,255,.90)!important;}
+    .chip b{color:#fff!important;}
+    ::placeholder{color:rgba(255,255,255,.60)!important;opacity:1;}
+    input::-webkit-input-placeholder{color:rgba(255,255,255,.60)!important;}
+    textarea::-webkit-input-placeholder{color:rgba(255,255,255,.60)!important;}
+    /* Ensure dropdown selected text visible */
+    .form-select{color:rgba(255,255,255,.95)!important;}
+    /* Table empty-state text */
+    .table td, .table th{color:rgba(255,255,255,.92);}
+    /* Buttons outline text */
+    .btn-outline-light, .btn-outline-warning{color:rgba(255,255,255,.92)!important;}
+    /* Links (if any) */
+    a{color:rgba(96,165,250,.95);}
+
+  
+/* ===== Hospital Light Theme ===== */
+:root{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --primary:#2563eb;     /* blue */
+  --accent:#16a34a;      /* green */
+  --border:#dbeafe;      /* light blue border */
+  --text:#0f172a;
+  --muted:#475569;
+}
+
+body{
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+
+.card{
+  background:var(--card)!important;
+  border:1px solid var(--border)!important;
+  box-shadow:0 4px 12px rgba(15,23,42,.06)!important;
+}
+
+h1,h2,h3,h4,h5{
+  color:#0f172a!important;
+  font-weight:700;
+}
+
+.text-muted,.muted{
+  color:var(--muted)!important;
+}
+
+.badge-soft{
+  background:#eff6ff!important;
+  color:#1e3a8a!important;
+  border:1px solid #bfdbfe!important;
+}
+
+.btn-primary{
+  background:var(--primary)!important;
+  border-color:var(--primary)!important;
+}
+.btn-primary:hover{filter:brightness(.95)}
+
+.btn-success{
+  background:var(--accent)!important;
+  border-color:var(--accent)!important;
+}
+
+.form-control,.form-select{
+  background:#ffffff!important;
+  color:#0f172a!important;
+  border:1px solid #c7d2fe!important;
+}
+.form-control:focus,.form-select:focus{
+  border-color:var(--primary)!important;
+  box-shadow:0 0 0 .2rem rgba(37,99,235,.15)!important;
+}
+
+::placeholder{
+  color:#94a3b8!important;
+}
+
+.table thead th{
+  background:#f1f5f9!important;
+  color:#0f172a!important;
+  border-bottom:2px solid #c7d2fe!important;
+}
+
+.table tbody tr.rowerr{
+  background:#fff7ed!important; /* nhẹ cảnh báo */
+}
+
+.badge.text-bg-warning{
+  background:#f59e0b!important;
+  color:#fff!important;
+}
+
+.kpi{
+  color:#1e293b!important;
+}
+
+.alert-warning{
+  background:#fffbeb!important;
+  color:#92400e!important;
+  border:1px solid #fde68a!important;
+}
+.alert-danger{
+  background:#fef2f2!important;
+  color:#991b1b!important;
+  border:1px solid #fecaca!important;
+}
+/* ===== End Hospital Light Theme ===== */
+
+</style>
 </head>
 
 <body>
