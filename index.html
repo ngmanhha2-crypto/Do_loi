@@ -4,660 +4,1422 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Lọc lỗi thời gian X-quang (Excel/CSV → Web)</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    body{background:#f6f8fc}
-    .card{border-radius:16px}
-    .table thead th{position:sticky;top:0;background:#ffffff;z-index:1}
-    .nowrap{white-space:nowrap}
-    .smallcode{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-    .kpi{font-size:1.9rem;font-weight:800}
-    .muted{color:#6b7280}
-    .badge-soft{background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff}
-    .rowerr{background:rgba(255,193,7,.10)}
-    .diag{white-space:pre-wrap}
-    .btn-primary{font-weight:700}
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --accent: #5eead4;
+      --accent2:#60a5fa;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --ok: #34d399;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    body{
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 500px at 10% 10%, rgba(96,165,250,.25), transparent 60%),
+        radial-gradient(900px 450px at 90% 20%, rgba(94,234,212,.18), transparent 55%),
+        radial-gradient(900px 450px at 30% 90%, rgba(251,113,133,.12), transparent 55%),
+        linear-gradient(180deg, #050812 0%, #0b1220 45%, #0b1220 100%);
+    }
+    .app-shell{max-width:1280px;margin:0 auto;padding:28px 16px 40px;}
+    .topbar{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:12px;user-select:none;}
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(94,234,212,.85), rgba(96,165,250,.55)),
+                  linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.02));
+      box-shadow: 0 10px 28px rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.18);
+      position:relative;overflow:hidden;
+    }
+    .logo:after{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 40% 30%, rgba(255,255,255,.25), transparent 55%);transform:rotate(20deg);}
+    .brand h1{margin:0;font-size:1.15rem;font-weight:850;letter-spacing:.2px;line-height:1.1;}
+    .brand .sub{margin:0;color:var(--muted);font-size:.88rem;}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--stroke);background:rgba(255,255,255,.06);
+      color:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+      box-shadow:0 10px 26px rgba(0,0,0,.22);font-size:.86rem;white-space:nowrap;
+    }
+    .chip b{color:#fff;font-weight:800;}
+    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;}
+    @media(max-width:980px){.grid{grid-template-columns:1fr;}}
+    .glass{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+      border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(12px);
+    }
+    .cardx{padding:18px;}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+    .section-title h2{font-size:1.02rem;font-weight:850;margin:0;letter-spacing:.2px;}
+    .section-title .hint{color:var(--muted);font-size:.86rem;margin:0;}
+    .divider{height:1px;background:linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);margin:14px 0;}
+    .form-label{color:rgba(255,255,255,.85);font-weight:700;font-size:.88rem;margin-bottom:6px;}
+    .form-text{color:rgba(255,255,255,.55)!important;}
+    .form-control,.form-select{
+      background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.16);
+      color:rgba(255,255,255,.92);border-radius:14px;padding:10px 12px;
+    }
+    .form-control:focus,.form-select:focus{
+      background:rgba(0,0,0,.30);border-color:rgba(94,234,212,.55);
+      box-shadow:0 0 0 .25rem rgba(94,234,212,.15);color:rgba(255,255,255,.95);
+    }
+    .form-select option{color:#111;}
+    .switchline{display:flex;flex-wrap:wrap;gap:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:14px;}
+    .form-check-input{cursor:pointer;background-color:rgba(255,255,255,.15);border-color:rgba(255,255,255,.25);}
+    .form-check-input:checked{background-color:rgba(94,234,212,.9);border-color:rgba(94,234,212,.9);}
+    .form-check-label{cursor:pointer;color:rgba(255,255,255,.82);font-weight:650;font-size:.88rem;}
+
+    .btn{border-radius:14px;font-weight:800;letter-spacing:.2px;padding:10px 14px;border:1px solid rgba(255,255,255,.14);}
+    .btn-primary{background:linear-gradient(135deg, rgba(94,234,212,.95), rgba(96,165,250,.90));border:0;color:#07111c;box-shadow:0 14px 40px rgba(96,165,250,.18);}
+    .btn-primary:hover{filter:brightness(1.02);transform:translateY(-1px);}
+    .btn:disabled{opacity:.55!important;cursor:not-allowed;transform:none!important;}
+    .btn-outline-light{color:rgba(255,255,255,.92);border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.04);}
+    .btn-outline-light:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);}
+    .btn-success{background:linear-gradient(135deg, rgba(52,211,153,.95), rgba(94,234,212,.75));border:0;color:#07111c;}
+    .btn-outline-warning{color:rgba(255,255,255,.92);border-color:rgba(251,191,36,.40);background:rgba(251,191,36,.08);}
+    .btn-outline-warning:hover{background:rgba(251,191,36,.13);border-color:rgba(251,191,36,.55);}
+
+    .kpi-wrap{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;}
+    @media(max-width:900px){.kpi-wrap{grid-template-columns:repeat(2,1fr);}}
+    .kpi-box{padding:14px 14px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);}
+    .kpi-box .lab{color:var(--muted);font-size:.82rem;font-weight:700;margin-bottom:6px;}
+    .kpi-box .val{font-size:1.8rem;font-weight:900;line-height:1;letter-spacing:.2px;}
+    .kpi-box .tag{margin-top:8px;display:inline-flex;gap:8px;align-items:center;font-size:.82rem;color:rgba(255,255,255,.72);}
+    .dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.25);display:inline-block;}
+    .dot.ok{background:var(--ok);} .dot.warn{background:var(--warn);} .dot.danger{background:var(--danger);}
+
+    .alertx{border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);padding:12px 14px;color:rgba(255,255,255,.86);white-space:pre-wrap;}
+    .alertx.warning{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08);}
+    .alertx.danger{border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.10);}
+
+    .table-wrap{border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.20);overflow:hidden;}
+    .table{margin:0;color:rgba(255,255,255,.88);}
+    .table thead th{
+      position:sticky;top:0;z-index:2;background:rgba(10,18,32,.92);
+      border-bottom:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);font-size:.82rem;white-space:nowrap;
+    }
+    .table td{border-top:1px solid rgba(255,255,255,.08);vertical-align:middle;font-size:.88rem;}
+    .rowerr{background:rgba(251,191,36,.06);}
+    .badge-soft{
+      display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+      color:rgba(255,255,255,.86);font-weight:900;font-size:.78rem;white-space:nowrap;
+    }
+    .badge-soft.warn{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.09);}
+    .badge-soft.danger{border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.10);}
+    .badge-soft.ok{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.10);}
+
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:.86rem;}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;}
+    .toolbar .left,.toolbar .right{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .small-muted{color:var(--muted);font-size:.85rem;}
+    .pulse{animation:pulse .35s ease-out;}
+    @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.015);}100%{transform:scale(1);}}
+    .table-responsive{max-height:58vh;}
+    .table-responsive::-webkit-scrollbar{height:10px;width:10px;}
+    .table-responsive::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:999px;}
+    .table-responsive::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
+
+    .tabs{
+      display:flex;gap:8px;flex-wrap:wrap;
+      padding:8px;border-radius:16px;border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .tabbtn{
+      padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18); color: rgba(255,255,255,.85);
+      font-weight:900; font-size:.86rem; cursor:pointer;
+      user-select:none;
+    }
+    .tabbtn.active{
+      background: linear-gradient(135deg, rgba(94,234,212,.30), rgba(96,165,250,.22));
+      border-color: rgba(94,234,212,.35);
+      color:#fff;
+    }
+    .hidden{display:none!important;}
+
+    .accordion-item{
+      border-radius: 16px!important;
+      border:1px solid rgba(255,255,255,.12)!important;
+      background: rgba(0,0,0,.18)!important;
+      overflow:hidden;
+    }
+    .accordion-button{
+      background: rgba(255,255,255,.04)!important;
+      color: rgba(255,255,255,.90)!important;
+      font-weight: 900;
+    }
+    .accordion-button:not(.collapsed){
+      background: linear-gradient(135deg, rgba(94,234,212,.16), rgba(96,165,250,.12))!important;
+      color:#fff!important;
+      box-shadow:none!important;
+    }
+    .accordion-body{color:rgba(255,255,255,.85);}
+    .accordion-button:focus{box-shadow:0 0 0 .25rem rgba(94,234,212,.12)!important;}
+
+    /* PRINT / PDF */
+    @media print{
+      body{background:#fff;color:#111;}
+      .glass{box-shadow:none!important;border:1px solid #ddd!important;background:#fff!important;}
+      .chip, .tabs, .btn, .form-control, .form-select, #diagBox, #xlsxBadge, #file, #btnCheckXlsx, #btnClear, #q, #typeFilter, #sortBy {display:none!important;}
+      .topbar{margin-bottom:10px;}
+      .brand .sub{color:#444!important;}
+      .table thead th{position:static!important;background:#f4f6f8!important;color:#111!important;border-bottom:1px solid #ddd!important;}
+      .table td{color:#111!important;border-top:1px solid #eee!important;}
+      .rowerr{background:#fff7e6!important;}
+      .small-muted{color:#444!important;}
+      .table-responsive{max-height:none!important;}
+      a[href]:after{content:"";}
+    }
   </style>
 </head>
+
 <body>
-<div class="container py-4">
-  <div class="card shadow-sm p-4 mb-3">
-    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-      <div>
-        <h1 class="h4 mb-1">Lọc lỗi thời gian cho <b>ca chụp X-quang</b></h1>
-        <div class="muted">
-          Upload <b>Excel (.xlsx)</b> hoặc <b>CSV</b> (dữ liệu giống <span class="smallcode">Sheet1</span>) → lọc ca X-quang và báo lỗi trùng.
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Lọc lỗi thời gian <span style="color:var(--accent)">X-quang</span></h1>
+          <p class="sub">Excel/CSV → Lọc theo ngày/giờ → Phân tích lỗi → Nhóm theo máy → Xuất Excel</p>
         </div>
       </div>
-      <div class="d-flex gap-2">
-        <span class="badge badge-soft">Chủ đề sáng</span>
-        <span class="badge badge-soft">Dùng được GitHub Pages</span>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <span class="chip">⚡ Offline <b>100%</b></span>
+        <span class="chip">🧠 Lọc ngày/giờ</span>
+        <span class="chip">📦 Xuất <b>XLSX</b></span>
+        <span class="chip">🖨 In/PDF</span>
       </div>
     </div>
 
-    <hr class="my-3">
-
-    <div class="row g-3 align-items-end">
-      <div class="col-lg-6">
-        <label class="form-label">Chọn file dữ liệu</label>
-        <input id="file" class="form-control" type="file" accept=".xlsx,.xls,.csv,.txt,.tsv" />
-        <div class="form-text">
-          Ưu tiên sheet <b>Sheet1</b> (nếu là Excel). Nếu mạng chặn CDN khiến không đọc được Excel, bạn có thể <b>Save As CSV UTF-8</b> rồi tải CSV vào.
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <label class="form-label">Tiêu chí nhận diện ca X-quang</label>
-        <div class="d-flex flex-wrap gap-2">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="xqByService" checked>
-            <label class="form-check-label" for="xqByService">Tên DVKT chứa “x-quang / xq”</label>
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="glass cardx">
+        <div class="section-title">
+          <div>
+            <h2>1) Nạp dữ liệu & thiết lập lọc</h2>
+            <p class="hint">Lọc ngày/giờ áp dụng cho <b>BĐ (Ngày thực hiện YL)</b>.</p>
           </div>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="xqByMachine" checked>
-            <label class="form-check-label" for="xqByMachine">Mã máy bắt đầu bằng “XQ”</label>
+
+          <div class="badge-soft" id="xlsxBadge">
+            <span class="dot" id="xlsxDot"></span>
+            XLSX: <span id="xlsxText">—</span>
           </div>
         </div>
 
-        <div class="row g-2 mt-2">
+        <div class="divider"></div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Chọn file dữ liệu</label>
+            <input id="file" class="form-control" type="file" accept=".xlsx,.xls,.csv,.txt,.tsv" />
+            <div class="form-text">Đặt <b>xlsx.full.min.js</b> cùng thư mục với HTML để đọc .xlsx và xuất .xlsx offline.</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Tiêu chí nhận diện ca X-quang</label>
+            <div class="switchline">
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="xqByService" checked>
+                <label class="form-check-label" for="xqByService">Tên DVKT chứa “x-quang / xq”</label>
+              </div>
+              <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="xqByMachine" checked>
+                <label class="form-check-label" for="xqByMachine">Mã máy bắt đầu bằng “XQ”</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- NEW: date/time filters -->
+          <div class="col-12">
+            <label class="form-label">Lọc theo ngày</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input id="fromDate" type="date" class="form-control" />
+                <div class="form-text">Từ ngày (rỗng = không giới hạn)</div>
+              </div>
+              <div class="col-md-6">
+                <input id="toDate" type="date" class="form-control" />
+                <div class="form-text">Đến ngày (rỗng = không giới hạn)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Lọc theo giờ trong ngày</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input id="fromTime" type="time" class="form-control" value="00:00" />
+                <div class="form-text">Giờ bắt đầu (BĐ ≥ giờ này)</div>
+              </div>
+              <div class="col-md-6">
+                <input id="toTime" type="time" class="form-control" value="23:59" />
+                <div class="form-text">Giờ kết thúc (BĐ ≤ giờ này)</div>
+              </div>
+            </div>
+            <div class="form-text mt-1">Áp dụng theo <b>BĐ (Ngày thực hiện YL)</b>. Nếu BĐ trống: không qua được lọc (và vẫn có lỗi “Thiếu BĐ”).</div>
+          </div>
+
           <div class="col-md-6">
             <label class="form-label">Ngưỡng “thực hiện dưới” (phút)</label>
             <input id="minMinutes" type="number" class="form-control" value="6" min="1" step="1">
           </div>
           <div class="col-md-6">
-            <label class="form-label">So khớp trùng theo (phút làm tròn) <span class="text-muted" style="font-size:12px">(giây luôn bỏ qua)</span></label>
+            <label class="form-label">So khớp trùng theo phút (bỏ giây)</label>
             <input id="roundToMin" type="number" class="form-control" value="1" min="1" step="1">
+          </div>
+
+          <div class="col-12">
+            <div class="toolbar">
+              <div class="left">
+                <button id="btnRun" class="btn btn-primary" disabled>🔎 PHÂN TÍCH</button>
+                <button id="btnExport" class="btn btn-success" disabled>⬇ Xuất CSV lỗi</button>
+                <button id="btnExportXlsx" class="btn btn-success" disabled>📦 Xuất Excel (.xlsx)</button>
+                <button id="btnPrint" class="btn btn-outline-light" disabled>🖨 In / PDF</button>
+              </div>
+              <div class="right">
+                <button id="btnCheckXlsx" class="btn btn-outline-warning">🧩 Kiểm tra XLSX</button>
+                <button id="btnClear" class="btn btn-outline-light">🧹 Xoá</button>
+              </div>
+            </div>
+            <div class="small-muted mt-2" id="sourceHint">Nguồn dữ liệu: —</div>
+          </div>
+
+          <div class="col-12">
+            <div id="diagBox" class="alertx warning d-none"></div>
+          </div>
+
+          <div class="col-12">
+            <div class="tabs">
+              <div class="tabbtn active" id="tabDetail">📋 Bảng lỗi</div>
+              <div class="tabbtn" id="tabGroup">🧩 Nhóm theo máy</div>
+              <div class="tabbtn" id="tabStats">📈 Thống kê</div>
+            </div>
+            <div class="small-muted mt-2">Lưu ý: “Trùng thời gian bắt đầu” = <b>cùng phút BĐ</b> + <b>khác Mã máy</b>.</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="d-flex flex-wrap gap-2 mt-3">
-      <button id="btnRun" class="btn btn-primary" disabled>🔎 Phân tích</button>
-      <button id="btnCheckXlsx" class="btn btn-outline-primary">🧩 Kiểm tra XLSX</button>
-      <button id="btnExport" class="btn btn-success" disabled>Xuất CSV lỗi</button>
-      <button id="btnClear" class="btn btn-outline-secondary">Xoá kết quả</button>
-    </div>
+      <!-- RIGHT -->
+      <div class="glass cardx">
+        <div class="section-title">
+          <div>
+            <h2>2) Kết quả</h2>
+            <p class="hint">Dùng lọc nhanh + lọc loại lỗi + sắp xếp.</p>
+          </div>
+        </div>
 
-    <div id="diagBox" class="alert alert-warning mt-3 d-none diag"></div>
-    <div id="xlsxStatus" class="mt-2 small text-muted"></div>
-  </div>
+        <div class="divider"></div>
 
-  <div class="card shadow-sm p-4 mb-3">
-    <div class="row g-3">
-      <div class="col-md-3">
-        <div class="muted">Tổng dòng đọc</div>
-        <div id="kpiRows" class="kpi">—</div>
-      </div>
-      <div class="col-md-3">
-        <div class="muted">Dòng X-quang</div>
-        <div id="kpiXQ" class="kpi">—</div>
-      </div>
-      <div class="col-md-3">
-        <div class="muted">Số lỗi</div>
-        <div id="kpiErrors" class="kpi">—</div>
-      </div>
-      <div class="col-md-3">
-        <div class="muted">Nguồn dữ liệu</div>
-        <div id="kpiSheet" class="kpi">—</div>
-      </div>
-    </div>
+        <div class="kpi-wrap">
+          <div class="kpi-box">
+            <div class="lab">Tổng dòng đọc</div>
+            <div id="kpiRows" class="val">—</div>
+            <div class="tag"><span class="dot"></span> Input</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lab">Dòng X-quang (sau lọc ngày/giờ)</div>
+            <div id="kpiXQ" class="val">—</div>
+            <div class="tag"><span class="dot ok"></span> Sau lọc</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lab">Số lỗi</div>
+            <div id="kpiErrors" class="val">—</div>
+            <div class="tag"><span class="dot warn"></span> Cần kiểm</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lab">Nguồn dữ liệu</div>
+            <div id="kpiSheet" class="val" style="font-size:1.05rem;line-height:1.2">—</div>
+            <div class="tag"><span class="dot"></span> Sheet/CSV</div>
+          </div>
+        </div>
 
-    <hr class="my-3">
+        <div class="divider"></div>
 
-    <div class="row g-2 align-items-end">
-      <div class="col-lg-5">
-        <label class="form-label">Lọc nhanh</label>
-        <input id="q" class="form-control" placeholder="VD: Trùng Ngày thực hiện YL (cùng mã máy), XQ.2..., tên KTV, mã KCB..." />
-      </div>
-      <div class="col-lg-3">
-        <label class="form-label">Chỉ hiển thị loại lỗi</label>
-        <select id="typeFilter" class="form-select">
-          <option value="">(Tất cả)</option>
-        </select>
-      </div>
-      <div class="col-lg-2">
-        <label class="form-label">Sắp xếp</label>
-        <select id="sortBy" class="form-select">
-          <option value="time">Thời gian</option>
-          <option value="type">Loại lỗi</option>
-          <option value="machine">Mã máy → Thời gian</option>
-        </select>
-      </div>
-      <div class="col-lg-2 d-grid">
-        <button id="btnCopySummary" class="btn btn-outline-primary">Copy tóm tắt</button>
-      </div>
-    </div>
+        <!-- FILTER BAR -->
+        <div id="filterBar">
+          <div class="toolbar">
+            <div class="left" style="flex:1; min-width:260px;">
+              <div style="width:100%">
+                <label class="form-label">Lọc nhanh</label>
+                <input id="q" class="form-control" placeholder="VD: Trùng thời gian bắt đầu, chồng lấn, XQ.2..., mã KCB..." />
+              </div>
+            </div>
 
-    <div class="table-responsive mt-3" style="max-height:60vh">
-      <table class="table table-sm table-hover align-middle">
-        <thead>
-          <tr>
-            <th class="nowrap">#</th>
-            <th class="nowrap">Loại lỗi</th>
-            <th>Mô tả</th>
-            <th class="nowrap">Mã máy</th>
-            <th class="nowrap">Người TH</th>
-            <th class="nowrap">Bác sĩ</th>
-            <th class="nowrap">Mã KCB</th>
-            <th>DVKT</th>
-            <th class="nowrap">BĐ</th>
-            <th class="nowrap">KT</th>
-            <th class="nowrap">Phút</th>
-            <th class="nowrap">Dòng liên quan</th>
-          </tr>
-        </thead>
-        <tbody id="tbody">
-          <tr><td colspan="12" class="text-muted">Chưa có dữ liệu. Hãy tải file và bấm <b>Phân tích</b>.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+            <div class="right" style="flex:1; justify-content:flex-end; min-width:260px;">
+              <div style="min-width:230px; width:100%">
+                <label class="form-label">Chỉ hiển thị loại lỗi</label>
+                <select id="typeFilter" class="form-select">
+                  <option value="">(Tất cả)</option>
+                </select>
+              </div>
 
-<script src="./xlsx.full.min.js"></script>
-<script>
-  const $ = (id) => document.getElementById(id);
+              <div style="min-width:230px; width:100%">
+                <label class="form-label">Sắp xếp</label>
+                <select id="sortBy" class="form-select">
+                  <option value="time">Thời gian</option>
+                  <option value="type">Loại lỗi</option>
+                  <option value="machine">Mã máy → Thời gian</option>
+                </select>
+              </div>
 
-  function showDiag(msg, level="warning"){
-    const box = $("diagBox");
-    box.className = "alert alert-" + (level==="danger" ? "danger" : "warning") + " mt-3 diag";
-    box.textContent = msg;
-    box.classList.remove("d-none");
-  }
-  function hideDiag(){ $("diagBox").classList.add("d-none"); $("diagBox").textContent=""; }
+              <div class="d-grid" style="min-width:190px;">
+                <label class="form-label">&nbsp;</label>
+                <button id="btnCopySummary" class="btn btn-outline-light">📋 Copy tóm tắt</button>
+              </div>
+            </div>
+          </div>
 
-  function excelNumberToDate(n) {
-    const epoch = Date.UTC(1899, 11, 30);
-    const ms = Math.round(n * 86400000);
-    return new Date(epoch + ms);
-  }
+          <div class="divider"></div>
+        </div>
 
-  function toDate(val) {
-    if (val == null || val === "") return null;
-    if (val instanceof Date && !isNaN(val)) return val;
-    if (typeof val === "number" && isFinite(val)) return excelNumberToDate(val);
-    if (typeof val === "string") {
-      const s = val.trim().replace(/\s+/g, " ");
-      const iso = new Date(s);
-      if (!isNaN(iso)) return iso;
+        <!-- VIEWS -->
+        <div id="viewDetail">
+          <div class="table-wrap">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Loại lỗi</th>
+                    <th>Mô tả</th>
+                    <th>Mã máy</th>
+                    <th>Người TH</th>
+                    <th>Bác sĩ</th>
+                    <th>Mã KCB</th>
+                    <th>DVKT</th>
+                    <th>BĐ</th>
+                    <th>KT</th>
+                    <th>Phút</th>
+                    <th>Dòng liên quan</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody">
+                  <tr><td colspan="12" class="text-center" style="color:rgba(255,255,255,.62); padding:16px">
+                    Chưa có dữ liệu. Hãy tải file và bấm <b>PHÂN TÍCH</b>.
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
-      if (m) {
-        let d = parseInt(m[1],10), mo = parseInt(m[2],10)-1, y = parseInt(m[3],10);
-        if (y < 100) y += 2000;
-        let hh = m[4] ? parseInt(m[4],10) : 0;
-        const mm = m[5] ? parseInt(m[5],10) : 0;
-        const ss = m[6] ? parseInt(m[6],10) : 0;
-        const ap = m[7] ? m[7].toUpperCase() : null;
-        if (ap === "PM" && hh < 12) hh += 12;
-        if (ap === "AM" && hh === 12) hh = 0;
-        const dt = new Date(y, mo, d, hh, mm, ss);
-        if (!isNaN(dt)) return dt;
-      }
+        <div id="viewGroup" class="hidden">
+          <div id="groupBox" class="small-muted">Chưa có dữ liệu.</div>
+        </div>
+
+        <div id="viewStats" class="hidden">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="table-wrap">
+                <div class="p-3">
+                  <div class="badge-soft ok">📌 Thống kê nhanh</div>
+                  <div class="small-muted mt-2" id="statsSummary">Chưa có dữ liệu.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="table-wrap">
+                <div class="p-3">
+                  <div class="badge-soft">📍 Lỗi theo loại</div>
+                  <div class="table-responsive" style="max-height:260px">
+                    <table class="table table-sm mb-0">
+                      <thead><tr><th>Loại</th><th class="text-end">Số</th></tr></thead>
+                      <tbody id="tbType"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="table-wrap">
+                <div class="p-3">
+                  <div class="badge-soft">🧩 Lỗi theo Mã máy</div>
+                  <div class="table-responsive" style="max-height:260px">
+                    <table class="table table-sm mb-0">
+                      <thead><tr><th>Mã máy</th><th class="text-end">Số</th></tr></thead>
+                      <tbody id="tbMachine"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="table-wrap">
+                <div class="p-3">
+                  <div class="badge-soft">🗓 Lỗi theo ngày</div>
+                  <div class="table-responsive" style="max-height:260px">
+                    <table class="table table-sm mb-0">
+                      <thead><tr><th>Ngày</th><th class="text-end">Số</th></tr></thead>
+                      <tbody id="tbDay"></tbody>
+                    </table>
+                  </div>
+                  <div class="small-muted mt-2">Ngày lấy theo <b>BĐ</b> (thiếu BĐ thì lấy theo KT).</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /RIGHT -->
+    </div><!-- /grid -->
+  </div><!-- /shell -->
+
+  <!-- XLSX local (offline) -->
+  <script src="./xlsx.full.min.js"></script>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function showDiag(msg, level="warning"){
+      const box = $("diagBox");
+      box.classList.remove("d-none");
+      box.className = "alertx " + (level==="danger" ? "danger" : "warning");
+      box.textContent = msg;
     }
-    return null;
-  }
-
-  function fmt(dt) {
-    if (!dt) return "";
-    try {
-      const f = new Intl.DateTimeFormat("vi-VN", {
-        timeZone: "Asia/Ho_Chi_Minh",
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit"
-      });
-      return f.format(dt);
-    } catch (e) { return dt.toLocaleString(); }
-  }
-
-  function safe(v) { return (v==null) ? "" : String(v); }
-  function minutesBetween(a,b) { return Math.round((b.getTime()-a.getTime())/60000); }
-
-  // CSV parsing fallback
-  function parseCSV(text){
-    const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l=>l.trim()!=="");
-    if (!lines.length) return {headers:[], rows:[]};
-    const head = lines[0];
-    const comma = (head.match(/,/g)||[]).length;
-    const semi = (head.match(/;/g)||[]).length;
-    const tab = (head.match(/\t/g)||[]).length;
-    const delim = tab>0 ? "\t" : (semi>comma ? ";" : ",");
-
-    const splitLine = (line) => {
-      const out = [];
-      let cur="", inQ=false;
-      for (let i=0;i<line.length;i++){
-        const ch=line[i];
-        if (ch === '"'){
-          if (inQ && line[i+1] === '"'){ cur+='"'; i++; }
-          else inQ = !inQ;
-        } else if (!inQ && ch === delim){
-          out.push(cur); cur="";
-        } else cur += ch;
-      }
-      out.push(cur);
-      return out.map(s=>s.trim());
-    };
-
-    const headers = splitLine(lines[0]);
-    const rows = [];
-    for (let r=1;r<lines.length;r++){
-      const cols = splitLine(lines[r]);
-      if (cols.every(c=>c==="")) continue;
-      rows.push(cols);
+    function hideDiag(){
+      const box = $("diagBox");
+      box.classList.add("d-none");
+      box.textContent = "";
     }
-    return {headers, rows, delim};
-  }
 
-  function normHeader(h){ return safe(h).trim().toLowerCase().replace(/\s+/g," "); }
-  function mapHeaders(headers){
-    const idx = {}; headers.forEach((h,i)=> idx[normHeader(h)] = i);
-    const pick = (cands) => {
-      for (const c of cands){ const k=normHeader(c); if (k in idx) return idx[k]; }
-      for (const c of cands){
-        const k=normHeader(c);
-        for (const key in idx){ if (key.includes(k)) return idx[key]; }
-      }
-      return -1;
-    };
-    return {
-      ten: pick(["tên dvkt","ten dvkt","dvkt"]),
-      maMay: pick(["mã máy","ma may"]),
-      nguoiTH: pick(["người thực hiện","nguoi thuc hien"]),
-      bacSi: pick(["bác sĩ","bac si"]),
-      maKCB: pick(["mã kcb","ma kcb"]),
-      start: pick(["ngày thực hiện yl","ngày thực hiện"]),
-      end: pick(["ngày kết quả"])
-    };
-  }
+    function excelNumberToDate(n) {
+      const epoch = Date.UTC(1899, 11, 30);
+      const ms = Math.round(n * 86400000);
+      return new Date(epoch + ms);
+    }
 
-  function bucketTime(dt, roundToMin) {
-    if (!dt) return "";
-    const bucket = Math.max(1, roundToMin) * 60000;
-    const rounded = Math.floor(dt.getTime() / bucket) * bucket;
-    return String(rounded);
-  }
+    function toDate(val) {
+      if (val == null || val === "") return null;
+      if (val instanceof Date && !isNaN(val)) return val;
+      if (typeof val === "number" && isFinite(val)) return excelNumberToDate(val);
 
-  
-  function bucketMinute(dt) {
-    if (!dt) return "";
-    // So trùng theo phút để tránh lệch giây (Excel đôi khi có giây ẩn)
-    const minute = 60000;
-    return String(Math.floor(dt.getTime() / minute) * minute);
-  }
-function isXQ(row, byService, byMachine) {
-    const ten = safe(row.ten).toLowerCase();
-    const ma = safe(row.maMay).trim().toUpperCase();
-    const okService = byService ? (ten.includes("x-quang") || ten.includes("x quang") || ten.includes("xq") || ten.includes("x-ray") || ten.includes("xray")) : false;
-    const okMachine = byMachine ? (ma.startsWith("XQ")) : false;
-    if (byService && byMachine) return okService || okMachine;
-    if (byService) return okService;
-    if (byMachine) return okMachine;
-    return true;
-  }
+      if (typeof val === "string") {
+        const s = val.trim().replace(/\s+/g, " ");
+        const iso = new Date(s);
+        if (!isNaN(iso)) return iso;
 
-  function mkErr(type, row, desc, relatedRows=[]) {
-    const dur = (row.start && row.end) ? minutesBetween(row.start, row.end) : null;
-    const related = relatedRows.length ? relatedRows.map(r=>r.rownum).join(", ") : "";
-    return {
-      type, desc,
-      rownum: row.rownum,
-      maMay: row.maMay,
-      nguoiTH: row.nguoiTH,
-      bacSi: row.bacSi,
-      maKCB: row.maKCB,
-      ten: row.ten,
-      start: row.start,
-      end: row.end,
-      duration: dur,
-      related
-    };
-  }
-
-  function analyzeXQ(rows, opts) {
-    const errors = [];
-    const roundToMin = Math.max(1, opts.roundToMin);
-    const minM = Math.max(1, opts.minMinutes);
-
-    for (const r of rows) {
-      if (r.start && r.end) {
-        const dur = minutesBetween(r.start, r.end);
-        if (dur >= 0 && dur < minM) {
-          errors.push(mkErr("Thực hiện dưới 6 phút", r, `Thời gian thực hiện ${dur} phút < ${minM} phút`, []));
+        const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+        if (m) {
+          let d = parseInt(m[1],10), mo = parseInt(m[2],10)-1, y = parseInt(m[3],10);
+          if (y < 100) y += 2000;
+          let hh = m[4] ? parseInt(m[4],10) : 0;
+          const mm = m[5] ? parseInt(m[5],10) : 0;
+          const ss = m[6] ? parseInt(m[6],10) : 0;
+          const ap = m[7] ? m[7].toUpperCase() : null;
+          if (ap === "PM" && hh < 12) hh += 12;
+          if (ap === "AM" && hh === 12) hh = 0;
+          const dt = new Date(y, mo, d, hh, mm, ss);
+          if (!isNaN(dt)) return dt;
         }
       }
+      return null;
     }
 
-    const mapStart = new Map();
-    for (const r of rows) {
-      if (!r.start) continue;
-      const key = bucketMinute(r.start);
-      if (!mapStart.has(key)) mapStart.set(key, []);
-      mapStart.get(key).push(r);
+    function fmt(dt) {
+      if (!dt) return "";
+      try {
+        const f = new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", minute: "2-digit"
+        });
+        return f.format(dt);
+      } catch (e) {
+        return dt.toLocaleString();
+      }
     }
-    for (const [key, arr] of mapStart.entries()) {
-      if (arr.length < 2) continue;
-      const machines = new Set(arr.map(x => safe(x.maMay).trim()).filter(Boolean));
-      if (machines.size >= 2) {
+
+    function fmtDay(dt){
+      if (!dt) return "";
+      try{
+        const f = new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          year:"numeric", month:"2-digit", day:"2-digit"
+        });
+        return f.format(dt);
+      }catch(e){
+        const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,"0"), d=String(dt.getDate()).padStart(2,"0");
+        return `${d}/${m}/${y}`;
+      }
+    }
+
+    function safe(v) { return (v==null) ? "" : String(v); }
+    function minutesBetween(a,b) { return Math.round((b.getTime()-a.getTime())/60000); }
+
+    // CSV parsing fallback
+    function parseCSV(text){
+      const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l=>l.trim()!=="");
+      if (!lines.length) return {headers:[], rows:[]};
+
+      const head = lines[0];
+      const comma = (head.match(/,/g)||[]).length;
+      const semi = (head.match(/;/g)||[]).length;
+      const tab = (head.match(/\t/g)||[]).length;
+      const delim = tab>0 ? "\t" : (semi>comma ? ";" : ",");
+
+      const splitLine = (line) => {
+        const out = [];
+        let cur="", inQ=false;
+        for (let i=0;i<line.length;i++){
+          const ch=line[i];
+          if (ch === '"'){
+            if (inQ && line[i+1] === '"'){ cur+='"'; i++; }
+            else inQ = !inQ;
+          } else if (!inQ && ch === delim){
+            out.push(cur); cur="";
+          } else cur += ch;
+        }
+        out.push(cur);
+        return out.map(s=>s.trim());
+      };
+
+      const headers = splitLine(lines[0]);
+      const rows = [];
+      for (let r=1;r<lines.length;r++){
+        const cols = splitLine(lines[r]);
+        if (cols.every(c=>c==="")) continue;
+        rows.push(cols);
+      }
+      return {headers, rows, delim};
+    }
+
+    function normHeader(h){ return safe(h).trim().toLowerCase().replace(/\s+/g," "); }
+    function mapHeaders(headers){
+      const idx = {}; headers.forEach((h,i)=> idx[normHeader(h)] = i);
+
+      const pick = (cands) => {
+        for (const c of cands){
+          const k=normHeader(c);
+          if (k in idx) return idx[k];
+        }
+        for (const c of cands){
+          const k=normHeader(c);
+          for (const key in idx){
+            if (key.includes(k)) return idx[key];
+          }
+        }
+        return -1;
+      };
+
+      return {
+        ten: pick(["tên dvkt","ten dvkt","dvkt"]),
+        maMay: pick(["mã máy","ma may"]),
+        nguoiTH: pick(["người thực hiện","nguoi thuc hien"]),
+        bacSi: pick(["bác sĩ","bac si"]),
+        maKCB: pick(["mã kcb","ma kcb"]),
+        start: pick(["ngày thực hiện yl","ngày thực hiện"]),
+        end: pick(["ngày kết quả"])
+      };
+    }
+
+    function bucketMinute(dt) {
+      if (!dt) return "";
+      const minute = 60000;
+      return String(Math.floor(dt.getTime() / minute) * minute);
+    }
+
+    function isXQ(row, byService, byMachine) {
+      const ten = safe(row.ten).toLowerCase();
+      const ma = safe(row.maMay).trim().toUpperCase();
+      const okService = byService ? (
+        ten.includes("x-quang") || ten.includes("x quang") || ten.includes("xq") ||
+        ten.includes("x-ray") || ten.includes("xray")
+      ) : false;
+      const okMachine = byMachine ? (ma.startsWith("XQ")) : false;
+
+      if (byService && byMachine) return okService || okMachine;
+      if (byService) return okService;
+      if (byMachine) return okMachine;
+      return true;
+    }
+
+    // NEW: lọc theo ngày/giờ (áp dụng theo BĐ)
+    function parseHHMM(t){
+      if (!t) return null;
+      const m = String(t).match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return null;
+      const hh = Math.min(23, Math.max(0, parseInt(m[1],10)));
+      const mm = Math.min(59, Math.max(0, parseInt(m[2],10)));
+      return hh*60 + mm;
+    }
+
+    function isInDateTimeWindow(startDt){
+      // Nếu thiếu BĐ: không qua lọc (để vẫn phát hiện lỗi thiếu BĐ nếu bạn muốn phân tích cả)
+      // Ở đây ta chọn: thiếu BĐ => vẫn đưa vào phân tích (để báo lỗi Thiếu BĐ)
+      if (!startDt) return true;
+
+      const fromDate = $("fromDate").value; // yyyy-mm-dd
+      const toDate = $("toDate").value;     // yyyy-mm-dd
+      const fromTime = parseHHMM($("fromTime").value || "00:00");
+      const toTime   = parseHHMM($("toTime").value || "23:59");
+
+      if (fromDate){
+        const [y,m,d] = fromDate.split("-").map(n=>parseInt(n,10));
+        const minDt = new Date(y, m-1, d, 0,0,0);
+        if (startDt < minDt) return false;
+      }
+      if (toDate){
+        const [y,m,d] = toDate.split("-").map(n=>parseInt(n,10));
+        const maxDt = new Date(y, m-1, d, 23,59,59);
+        if (startDt > maxDt) return false;
+      }
+
+      const startMin = startDt.getHours()*60 + startDt.getMinutes();
+      if (fromTime!=null && startMin < fromTime) return false;
+      if (toTime!=null && startMin > toTime) return false;
+
+      return true;
+    }
+
+    function mkErr(type, row, desc, relatedRows=[]) {
+      const dur = (row.start && row.end) ? minutesBetween(row.start, row.end) : null;
+      const related = relatedRows.length ? relatedRows.map(r=>r.rownum).join(", ") : "";
+      return {
+        type, desc,
+        rownum: row.rownum,
+        maMay: row.maMay,
+        nguoiTH: row.nguoiTH,
+        bacSi: row.bacSi,
+        maKCB: row.maKCB,
+        ten: row.ten,
+        start: row.start,
+        end: row.end,
+        duration: dur,
+        related
+      };
+    }
+
+    function analyzeXQ(rows, opts) {
+      const errors = [];
+      const minM = Math.max(1, opts.minMinutes || 6);
+
+      // A) Thiếu thời gian / âm / dưới ngưỡng
+      for (const r of rows) {
+        const hasStart = !!r.start;
+        const hasEnd = !!r.end;
+
+        if (!hasStart) errors.push(mkErr("Thiếu thời gian bắt đầu", r, "Thiếu Ngày thực hiện YL", []));
+        if (!hasEnd)   errors.push(mkErr("Thiếu thời gian kết thúc", r, "Thiếu Ngày kết quả", []));
+
+        if (hasStart && hasEnd){
+          const dur = minutesBetween(r.start, r.end);
+          if (dur < 0){
+            errors.push(mkErr("Thời gian âm (KT < BĐ)", r, `KT (${fmt(r.end)}) nhỏ hơn BĐ (${fmt(r.start)})`, []));
+          } else if (dur < minM) {
+            errors.push(mkErr(`Thực hiện dưới ${minM} phút`, r, `Thời gian thực hiện ${dur} phút < ${minM} phút`, []));
+          }
+        }
+      }
+
+      // B) Trùng thời gian bắt đầu: cùng phút BĐ + KHÁC mã máy
+      const mapStart = new Map();
+      for (const r of rows) {
+        if (!r.start) continue;
+        const key = bucketMinute(r.start);
+        if (!mapStart.has(key)) mapStart.set(key, []);
+        mapStart.get(key).push(r);
+      }
+      for (const [key, arr] of mapStart.entries()) {
+        if (arr.length < 2) continue;
+        for (const r of arr) {
+          const rMachine = safe(r.maMay).trim().toUpperCase();
+          const others = arr.filter(x => x !== r);
+          const othersDiffMachine = others.filter(x => safe(x.maMay).trim().toUpperCase() !== rMachine);
+          if (!othersDiffMachine.length) continue;
+
+          const otherMachines = Array.from(new Set(othersDiffMachine.map(x => safe(x.maMay).trim()).filter(Boolean))).join(", ");
+          const desc = `Trùng BĐ (${fmt(r.start)}) với máy khác: ${otherMachines || "(không rõ)"}`;
+          errors.push(mkErr("Trùng thời gian bắt đầu (khác mã máy)", r, desc, othersDiffMachine));
+        }
+      }
+
+      // C) Trùng thời gian kết thúc (theo phút)
+      const mapEnd = new Map();
+      for (const r of rows) {
+        if (!r.end) continue;
+        const key = bucketMinute(r.end);
+        if (!mapEnd.has(key)) mapEnd.set(key, []);
+        mapEnd.get(key).push(r);
+      }
+      for (const [key, arr] of mapEnd.entries()) {
+        if (arr.length < 2) continue;
         for (const r of arr) {
           const others = arr.filter(x => x !== r);
-          const otherMachines = Array.from(new Set(others.map(x=>safe(x.maMay).trim()).filter(Boolean))).join(", ");
-          const desc = `Trùng Ngày thực hiện YL (${fmt(r.start)}) và cùng mã máy. Máy khác: ${otherMachines || "(không rõ)"}`;
-          errors.push(mkErr("Trùng Ngày thực hiện YL (cùng mã máy)", r, desc, others));
+          const desc = `Trùng KT (${fmt(r.end)}) với ${others.length} ca khác`;
+          errors.push(mkErr("Trùng thời gian kết thúc", r, desc, others));
         }
       }
-    }
 
-    const mapEnd = new Map();
-    for (const r of rows) {
-      if (!r.end) continue;
-      const key = bucketMinute(r.end);
-      if (!mapEnd.has(key)) mapEnd.set(key, []);
-      mapEnd.get(key).push(r);
-    }
-    for (const [key, arr] of mapEnd.entries()) {
-      if (arr.length < 2) continue;
-      for (const r of arr) {
-        const others = arr.filter(x => x !== r);
-        const desc = `Trùng KT (${fmt(r.end)}) với ${others.length} ca khác`;
-        errors.push(mkErr("Trùng thời gian kết thúc", r, desc, others));
+      // D) Trùng Mã KCB
+      const mapKCB = new Map();
+      for (const r of rows){
+        const k = safe(r.maKCB).trim();
+        if (!k) continue;
+        if (!mapKCB.has(k)) mapKCB.set(k, []);
+        mapKCB.get(k).push(r);
       }
+      for (const [k, arr] of mapKCB.entries()){
+        if (arr.length < 2) continue;
+        for (const r of arr){
+          const others = arr.filter(x=>x!==r);
+          errors.push(mkErr("Trùng Mã KCB", r, `Mã KCB ${k} xuất hiện ${arr.length} dòng`, others));
+        }
+      }
+
+      // E) Chồng lấn thời gian (cùng máy)
+      const byMachine = new Map();
+      for (const r of rows){
+        const m = safe(r.maMay).trim().toUpperCase() || "(KHÔNG RÕ)";
+        if (!byMachine.has(m)) byMachine.set(m, []);
+        byMachine.get(m).push(r);
+      }
+      for (const [m, arr] of byMachine.entries()){
+        const valid = arr.filter(r => r.start && r.end && minutesBetween(r.start, r.end) >= 0);
+        valid.sort((a,b)=>a.start.getTime()-b.start.getTime());
+        for (let i=0;i<valid.length;i++){
+          const cur = valid[i];
+          for (let j=i+1;j<valid.length;j++){
+            const nxt = valid[j];
+            if (nxt.start.getTime() >= cur.end.getTime()) break;
+            const desc = `Chồng lấn cùng máy ${m}: [${fmt(cur.start)}–${fmt(cur.end)}] giao với dòng ${nxt.rownum} [${fmt(nxt.start)}–${fmt(nxt.end)}]`;
+            errors.push(mkErr("Chồng lấn thời gian (cùng máy)", cur, desc, [nxt]));
+          }
+        }
+      }
+
+      // Dedup
+      const seen = new Set();
+      const out = [];
+      for (const e of errors) {
+        const sig = [e.type, e.rownum, bucketMinute(e.start), bucketMinute(e.end), e.related].join("|");
+        if (seen.has(sig)) continue;
+        seen.add(sig);
+        out.push(e);
+      }
+      return out;
     }
 
-    const seen = new Set();
-    const out = [];
-    for (const e of errors) {
-      const sig = [e.type, e.rownum, bucketMinute(e.start), bucketMinute(e.end), e.related].join("|");
-      if (seen.has(sig)) continue;
-      seen.add(sig);
-      out.push(e);
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
-    return out;
-  }
 
-  function setKPIs(rowsCount, xqCount, errors, sourceName) {
-    $("kpiRows").textContent = rowsCount ?? "—";
-    $("kpiXQ").textContent = xqCount ?? "—";
-    $("kpiErrors").textContent = errors ? errors.length : "—";
-    $("kpiSheet").textContent = sourceName ?? "—";
-  }
+    function setKPIs(rowsCount, xqCount, errors, sourceName) {
+      $("kpiRows").textContent = rowsCount ?? "—";
+      $("kpiXQ").textContent = xqCount ?? "—";
+      $("kpiErrors").textContent = errors ? errors.length : "—";
+      $("kpiSheet").textContent = sourceName ?? "—";
+      $("sourceHint").textContent = "Nguồn dữ liệu: " + (sourceName ?? "—");
 
-  function fillTypeFilter(errors) {
-    const sel = $("typeFilter");
-    const cur = sel.value;
-    const types = Array.from(new Set(errors.map(e=>e.type))).sort();
-    sel.innerHTML = `<option value="">(Tất cả)</option>` + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
-    sel.value = cur;
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  }
-
-  function render(errors) {
-    const q = $("q").value.trim().toLowerCase();
-    const typeF = $("typeFilter").value;
-    const sortBy = $("sortBy").value;
-
-    let items = errors.slice();
-    if (typeF) items = items.filter(e=>e.type===typeF);
-    if (q) {
-      items = items.filter(e => {
-        const blob = [e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.rownum,e.related].join(" ").toLowerCase();
-        return blob.includes(q);
+      ["kpiRows","kpiXQ","kpiErrors","kpiSheet"].forEach(id=>{
+        const el = $(id);
+        el.classList.remove("pulse");
+        void el.offsetWidth;
+        el.classList.add("pulse");
       });
     }
 
-    if (sortBy === "type") items.sort((a,b)=>a.type.localeCompare(b.type) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
-    else if (sortBy === "machine") items.sort((a,b)=>safe(a.maMay).localeCompare(safe(b.maMay)) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
-    else items.sort((a,b)=>(a.start?.getTime()||0)-(b.start?.getTime()||0));
-
-    const tb = $("tbody");
-    if (!items.length) {
-      tb.innerHTML = `<tr><td colspan="12" class="text-muted">Không có lỗi theo bộ lọc hiện tại.</td></tr>`;
-      return;
+    function fillTypeFilter(errors) {
+      const sel = $("typeFilter");
+      const cur = sel.value;
+      const types = Array.from(new Set(errors.map(e=>e.type))).sort();
+      sel.innerHTML = `<option value="">(Tất cả)</option>` + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+      sel.value = cur;
     }
 
-    tb.innerHTML = items.map((e, idx) => `
-      <tr class="rowerr">
-        <td class="nowrap">${idx+1}</td>
-        <td class="nowrap"><span class="badge text-bg-warning">${escapeHtml(e.type)}</span></td>
-        <td>${escapeHtml(e.desc)}</td>
-        <td class="nowrap">${escapeHtml(safe(e.maMay))}</td>
-        <td class="nowrap">${escapeHtml(safe(e.nguoiTH))}</td>
-        <td class="nowrap">${escapeHtml(safe(e.bacSi))}</td>
-        <td class="nowrap">${escapeHtml(safe(e.maKCB))}</td>
-        <td>${escapeHtml(safe(e.ten))}</td>
-        <td class="nowrap">${escapeHtml(fmt(e.start))}</td>
-        <td class="nowrap">${escapeHtml(fmt(e.end))}</td>
-        <td class="nowrap">${e.duration==null ? "" : e.duration}</td>
-        <td class="nowrap">${e.related ? `Liên quan dòng: ${escapeHtml(e.related)}` : ""}</td>
-      </tr>
-    `).join("");
-  }
+    function renderDetail(errors) {
+      const q = $("q").value.trim().toLowerCase();
+      const typeF = $("typeFilter").value;
+      const sortBy = $("sortBy").value;
 
-  function exportCSV(errors) {
-    const headers = ["LoaiLoi","MoTa","MaMay","NguoiTH","BacSi","MaKCB","TenDVKT","BatDau","KetThuc","Phut","Dong","DongLienQuan"];
-    const rows = errors.map(e => [
-      e.type, e.desc, e.maMay, e.nguoiTH, e.bacSi, e.maKCB, e.ten, fmt(e.start), fmt(e.end),
-      e.duration ?? "", e.rownum ?? "", e.related ?? ""
-    ].map(v => `"${String(v??"").replace(/"/g,'""')}"`).join(","));
-    const csv = headers.join(",") + "\n" + rows.join("\n");
-    const BOM = "\uFEFF"; // UTF-8 BOM để Excel hiển thị tiếng Việt đúng
-    const blob = new Blob([BOM + csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `loi_xquang_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+      let items = errors.slice();
+      if (typeF) items = items.filter(e=>e.type===typeF);
+      if (q) {
+        items = items.filter(e => {
+          const blob = [e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.rownum,e.related].join(" ").toLowerCase();
+          return blob.includes(q);
+        });
+      }
 
-  let allRows = [];
-  let xqRows = [];
-  let analyzedErrors = [];
-  let sourceName = "—";
-  let selectedFile = null;
+      if (sortBy === "type") items.sort((a,b)=>a.type.localeCompare(b.type) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
+      else if (sortBy === "machine") items.sort((a,b)=>safe(a.maMay).localeCompare(safe(b.maMay)) || (a.start?.getTime()||0)-(b.start?.getTime()||0));
+      else items.sort((a,b)=>(a.start?.getTime()||0)-(b.start?.getTime()||0));
 
-  function canReadExcel(){ return typeof XLSX !== "undefined"; }
+      const tb = $("tbody");
+      if (!items.length) {
+        tb.innerHTML = `<tr><td colspan="12" class="text-center" style="color:rgba(255,255,255,.62); padding:16px">
+          Không có lỗi theo bộ lọc hiện tại.
+        </td></tr>`;
+        return;
+      }
 
-  async function loadDataFromFile(f){
-    hideDiag();
-    selectedFile = f;
-    allRows = []; xqRows = []; analyzedErrors = [];
-    $("btnExport").disabled = true;
-    $("tbody").innerHTML = `<tr><td colspan="12" class="text-muted">Đã tải file. Bấm <b>Phân tích</b> để xử lý…</td></tr>`;
+      tb.innerHTML = items.map((e, idx) => {
+        const cls = e.type.includes("âm") ? "danger" : "warn";
+        return `
+          <tr class="rowerr">
+            <td class="mono">${idx+1}</td>
+            <td><span class="badge-soft ${cls}">⚠ ${escapeHtml(e.type)}</span></td>
+            <td>${escapeHtml(e.desc)}</td>
+            <td class="mono">${escapeHtml(safe(e.maMay))}</td>
+            <td>${escapeHtml(safe(e.nguoiTH))}</td>
+            <td>${escapeHtml(safe(e.bacSi))}</td>
+            <td class="mono">${escapeHtml(safe(e.maKCB))}</td>
+            <td>${escapeHtml(safe(e.ten))}</td>
+            <td class="mono">${escapeHtml(fmt(e.start))}</td>
+            <td class="mono">${escapeHtml(fmt(e.end))}</td>
+            <td class="mono">${e.duration==null ? "" : e.duration}</td>
+            <td class="mono">${e.related ? `Liên quan: ${escapeHtml(e.related)}` : ""}</td>
+          </tr>
+        `;
+      }).join("");
+    }
 
-    if (!f){ $("btnRun").disabled = true; return; }
+    function buildGroupByMachine(errors){
+      const q = $("q").value.trim().toLowerCase();
+      const typeF = $("typeFilter").value;
 
-    const name = f.name || "—";
-    const ext = name.split(".").pop().toLowerCase();
+      let items = errors.slice();
+      if (typeF) items = items.filter(e=>e.type===typeF);
+      if (q) {
+        items = items.filter(e => {
+          const blob = [e.type,e.desc,e.maMay,e.nguoiTH,e.bacSi,e.maKCB,e.ten,fmt(e.start),fmt(e.end),e.rownum,e.related].join(" ").toLowerCase();
+          return blob.includes(q);
+        });
+      }
 
-    if (ext === "csv" || ext === "txt" || ext === "tsv"){
-      const text = await f.text();
-      const parsed = parseCSV(text);
-      const col = mapHeaders(parsed.headers);
+      if (!items.length){
+        $("groupBox").innerHTML = `<div class="text-center" style="color:rgba(255,255,255,.62); padding:16px">Không có lỗi theo bộ lọc hiện tại.</div>`;
+        return;
+      }
 
-      const missing = [];
-      if (col.start < 0) missing.push("Ngày thực hiện YL");
-      if (col.end < 0) missing.push("Ngày kết quả");
-      if (col.ten < 0) missing.push("Tên DVKT");
-      if (col.maMay < 0) missing.push("Mã máy");
-      if (missing.length){
-        showDiag("CSV thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra hàng tiêu đề giống Sheet1.", "danger");
+      const map = new Map();
+      for (const e of items){
+        const m = safe(e.maMay).trim().toUpperCase() || "(KHÔNG RÕ)";
+        if (!map.has(m)) map.set(m, []);
+        map.get(m).push(e);
+      }
+
+      const machines = Array.from(map.keys()).sort((a,b)=>a.localeCompare(b));
+      const accId = "accMachine";
+      const html = `
+        <div class="accordion" id="${accId}">
+          ${machines.map((m, idx)=>{
+            const arr = map.get(m);
+            arr.sort((a,b)=>(a.start?.getTime()||0)-(b.start?.getTime()||0));
+            const body = `
+              <div class="table-wrap mt-2">
+                <div class="table-responsive" style="max-height:360px">
+                  <table class="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>#</th><th>Loại lỗi</th><th>Mô tả</th><th>BĐ</th><th>KT</th><th>Dòng</th><th>Liên quan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${arr.map((e,i)=>`
+                        <tr class="rowerr">
+                          <td class="mono">${i+1}</td>
+                          <td><span class="badge-soft warn">${escapeHtml(e.type)}</span></td>
+                          <td>${escapeHtml(e.desc)}</td>
+                          <td class="mono">${escapeHtml(fmt(e.start))}</td>
+                          <td class="mono">${escapeHtml(fmt(e.end))}</td>
+                          <td class="mono">${escapeHtml(String(e.rownum ?? ""))}</td>
+                          <td class="mono">${escapeHtml(e.related ?? "")}</td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+            const cid = "m" + idx;
+            return `
+              <div class="accordion-item mb-2">
+                <h2 class="accordion-header">
+                  <button class="accordion-button ${idx===0 ? "" : "collapsed"}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#${cid}">
+                    🧩 Máy: <span class="mono ms-2">${escapeHtml(m)}</span>
+                    <span class="ms-auto badge-soft warn">Lỗi: ${arr.length}</span>
+                  </button>
+                </h2>
+                <div id="${cid}" class="accordion-collapse collapse ${idx===0 ? "show" : ""}" data-bs-parent="#${accId}">
+                  <div class="accordion-body">
+                    ${body}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+      $("groupBox").innerHTML = html;
+    }
+
+    function buildStats(errors, allRowsLen, xqRowsLen, sourceName){
+      if (!errors.length){
+        $("statsSummary").textContent = "Chưa có lỗi để thống kê.";
+        $("tbType").innerHTML = `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+        $("tbMachine").innerHTML = `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+        $("tbDay").innerHTML = `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+        return;
+      }
+
+      const typeCount = {};
+      const machineCount = {};
+      const dayCount = {};
+
+      for (const e of errors){
+        typeCount[e.type] = (typeCount[e.type]||0)+1;
+        const m = safe(e.maMay).trim().toUpperCase() || "(KHÔNG RÕ)";
+        machineCount[m] = (machineCount[m]||0)+1;
+        const day = fmtDay(e.start || e.end);
+        const dk = day || "(KHÔNG RÕ)";
+        dayCount[dk] = (dayCount[dk]||0)+1;
+      }
+
+      const topType = Object.entries(typeCount).sort((a,b)=>b[1]-a[1])[0];
+      const topMachine = Object.entries(machineCount).sort((a,b)=>b[1]-a[1])[0];
+      const topDay = Object.entries(dayCount).sort((a,b)=>b[1]-a[1])[0];
+
+      $("statsSummary").innerHTML = `
+        <div class="small-muted">
+          <div><b>Nguồn:</b> ${escapeHtml(sourceName||"—")}</div>
+          <div><b>Tổng dòng:</b> ${allRowsLen} · <b>X-quang (sau lọc):</b> ${xqRowsLen} · <b>Tổng lỗi:</b> ${errors.length}</div>
+          <div class="mt-2">
+            <span class="badge-soft warn">Top loại: ${escapeHtml(topType?.[0]||"—")} (${topType?.[1]||0})</span>
+            <span class="badge-soft warn ms-2">Top máy: ${escapeHtml(topMachine?.[0]||"—")} (${topMachine?.[1]||0})</span>
+            <span class="badge-soft warn ms-2">Top ngày: ${escapeHtml(topDay?.[0]||"—")} (${topDay?.[1]||0})</span>
+          </div>
+        </div>
+      `;
+
+      const rowsType = Object.entries(typeCount).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td class="text-end mono">${v}</td></tr>`).join("");
+      $("tbType").innerHTML = rowsType || `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+
+      const rowsMachine = Object.entries(machineCount).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`<tr><td class="mono">${escapeHtml(k)}</td><td class="text-end mono">${v}</td></tr>`).join("");
+      $("tbMachine").innerHTML = rowsMachine || `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+
+      const rowsDay = Object.entries(dayCount).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`<tr><td class="mono">${escapeHtml(k)}</td><td class="text-end mono">${v}</td></tr>`).join("");
+      $("tbDay").innerHTML = rowsDay || `<tr><td colspan="2" class="text-center" style="color:rgba(255,255,255,.62);padding:12px">—</td></tr>`;
+    }
+
+    function exportCSV(errors) {
+      const headers = ["LoaiLoi","MoTa","MaMay","NguoiTH","BacSi","MaKCB","TenDVKT","BatDau","KetThuc","Phut","Dong","DongLienQuan"];
+      const rows = errors.map(e => [
+        e.type, e.desc, e.maMay, e.nguoiTH, e.bacSi, e.maKCB, e.ten, fmt(e.start), fmt(e.end),
+        e.duration ?? "", e.rownum ?? "", e.related ?? ""
+      ].map(v => `"${String(v??"").replace(/"/g,'""')}"`).join(","));
+
+      const csv = headers.join(",") + "\n" + rows.join("\n");
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csv], {type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `loi_xquang_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // NEW: Export Excel (.xlsx) multi-sheet
+    function exportXLSX(errors, allLen, xqLen, sourceName){
+      if (typeof XLSX === "undefined"){
+        showDiag("Không thể xuất Excel vì thiếu thư viện XLSX. Hãy đặt xlsx.full.min.js cùng thư mục.", "danger");
+        return;
+      }
+      const now = new Date();
+      const fileName = `BaoCao_Loi_XQuang_${now.toISOString().slice(0,10)}.xlsx`;
+
+      // Sheet 1: LOI_CHI_TIET
+      const detail = errors.map((e, i)=>({
+        STT: i+1,
+        LoaiLoi: e.type,
+        MoTa: e.desc,
+        MaMay: e.maMay,
+        NguoiTH: e.nguoiTH,
+        BacSi: e.bacSi,
+        MaKCB: e.maKCB,
+        TenDVKT: e.ten,
+        BatDau: fmt(e.start),
+        KetThuc: fmt(e.end),
+        Phut: (e.duration==null ? "" : e.duration),
+        Dong: e.rownum ?? "",
+        DongLienQuan: e.related ?? ""
+      }));
+
+      // Sheet 2: TONG_HOP
+      const typeCount = {};
+      const machineCount = {};
+      const dayCount = {};
+      errors.forEach(e=>{
+        typeCount[e.type]=(typeCount[e.type]||0)+1;
+        const m=(safe(e.maMay).trim().toUpperCase()||"(KHÔNG RÕ)");
+        machineCount[m]=(machineCount[m]||0)+1;
+        const d=fmtDay(e.start||e.end) || "(KHÔNG RÕ)";
+        dayCount[d]=(dayCount[d]||0)+1;
+      });
+
+      const filtersSummary = [
+        ["Nguồn", sourceName || "—"],
+        ["Tổng dòng", allLen],
+        ["Dòng X-quang (sau lọc ngày/giờ)", xqLen],
+        ["Tổng lỗi", errors.length],
+        ["Từ ngày", $("fromDate").value || "(không)"],
+        ["Đến ngày", $("toDate").value || "(không)"],
+        ["Giờ từ", $("fromTime").value || "00:00"],
+        ["Giờ đến", $("toTime").value || "23:59"],
+        ["Ngưỡng phút < ", $("minMinutes").value || "6"],
+        ["Ghi chú", "Trùng BĐ = cùng phút BĐ + khác Mã máy"]
+      ];
+
+      const summaryRows = filtersSummary.map(([k,v])=>({ThongTin:k, GiaTri:String(v)}));
+
+      // Sheet 3: THEO_MAY
+      const byMachine = Object.entries(machineCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({MaMay:k, SoLoi:v}));
+
+      // Sheet 4: THEO_NGAY
+      const byDay = Object.entries(dayCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({Ngay:k, SoLoi:v}));
+
+      // Sheet 5: THEO_LOAI
+      const byType = Object.entries(typeCount).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({LoaiLoi:k, SoLoi:v}));
+
+      const wb = XLSX.utils.book_new();
+
+      const ws1 = XLSX.utils.json_to_sheet(detail.length?detail:[{STT:"",LoaiLoi:"",MoTa:""}]);
+      XLSX.utils.book_append_sheet(wb, ws1, "LOI_CHI_TIET");
+
+      const ws2 = XLSX.utils.json_to_sheet(summaryRows);
+      XLSX.utils.book_append_sheet(wb, ws2, "TONG_HOP");
+
+      const ws3 = XLSX.utils.json_to_sheet(byMachine.length?byMachine:[{MaMay:"",SoLoi:""}]);
+      XLSX.utils.book_append_sheet(wb, ws3, "THEO_MAY");
+
+      const ws4 = XLSX.utils.json_to_sheet(byDay.length?byDay:[{Ngay:"",SoLoi:""}]);
+      XLSX.utils.book_append_sheet(wb, ws4, "THEO_NGAY");
+
+      const ws5 = XLSX.utils.json_to_sheet(byType.length?byType:[{LoaiLoi:"",SoLoi:""}]);
+      XLSX.utils.book_append_sheet(wb, ws5, "THEO_LOAI");
+
+      // autosize columns (simple)
+      [ws1,ws2,ws3,ws4,ws5].forEach(ws=>{
+        const range = XLSX.utils.decode_range(ws["!ref"] || "A1:A1");
+        const colW = [];
+        for (let C=range.s.c; C<=range.e.c; ++C){
+          let max=10;
+          for (let R=range.s.r; R<=range.e.r; ++R){
+            const cell = ws[XLSX.utils.encode_cell({r:R,c:C})];
+            if (!cell) continue;
+            const v = String(cell.v ?? "");
+            max = Math.max(max, Math.min(60, v.length + 2));
+          }
+          colW.push({wch:max});
+        }
+        ws["!cols"] = colW;
+      });
+
+      XLSX.writeFile(wb, fileName);
+    }
+
+    let allRows = [];
+    let xqRows = [];
+    let analyzedErrors = [];
+    let sourceName = "—";
+    let selectedFile = null;
+
+    function canReadExcel(){ return typeof XLSX !== "undefined"; }
+
+    async function loadDataFromFile(f){
+      hideDiag();
+      selectedFile = f;
+      allRows = []; xqRows = []; analyzedErrors = [];
+      $("btnExport").disabled = true;
+      $("btnExportXlsx").disabled = true;
+      $("btnPrint").disabled = true;
+
+      $("tbody").innerHTML = `<tr><td colspan="12" class="text-center" style="color:rgba(255,255,255,.62); padding:16px">
+        Đã tải file. Bấm <b>PHÂN TÍCH</b> để xử lý…
+      </td></tr>`;
+      $("groupBox").textContent = "Đã tải file. Bấm PHÂN TÍCH để xem nhóm theo máy.";
+      $("statsSummary").textContent = "Đã tải file. Bấm PHÂN TÍCH để xem thống kê.";
+
+      if (!f){ $("btnRun").disabled = true; return; }
+
+      const name = f.name || "—";
+      const ext = name.split(".").pop().toLowerCase();
+
+      if (ext === "csv" || ext === "txt" || ext === "tsv"){
+        const text = await f.text();
+        const parsed = parseCSV(text);
+        const col = mapHeaders(parsed.headers);
+
+        const missing = [];
+        if (col.start < 0) missing.push("Ngày thực hiện YL");
+        if (col.end < 0) missing.push("Ngày kết quả");
+        if (col.ten < 0) missing.push("Tên DVKT");
+        if (col.maMay < 0) missing.push("Mã máy");
+        if (missing.length){
+          showDiag("CSV thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra hàng tiêu đề giống Sheet1.", "danger");
+          $("btnRun").disabled = true;
+          return;
+        }
+
+        allRows = parsed.rows.map((cols, idx)=>({
+          rownum: idx+2,
+          ten: cols[col.ten] ?? "",
+          maMay: cols[col.maMay] ?? "",
+          nguoiTH: col.nguoiTH>=0 ? (cols[col.nguoiTH] ?? "") : "",
+          bacSi: col.bacSi>=0 ? (cols[col.bacSi] ?? "") : "",
+          maKCB: col.maKCB>=0 ? (cols[col.maKCB] ?? "") : "",
+          start: toDate(cols[col.start]),
+          end: toDate(cols[col.end]),
+        }));
+
+        sourceName = "CSV: " + name;
+        setKPIs(allRows.length, "—", [], sourceName);
+        $("btnRun").disabled = false;
+        return;
+      }
+
+      if ((ext==="xlsx" || ext==="xls") && !canReadExcel()){
+        showDiag("Không đọc được Excel vì thiếu xlsx.full.min.js.\n➡️ Đặt xlsx.full.min.js cùng thư mục với index.html, hoặc Save As CSV UTF-8 để dùng CSV.", "danger");
         $("btnRun").disabled = true;
         return;
       }
 
-      allRows = parsed.rows.map((cols, idx)=>({
-        rownum: idx+2,
-        ten: cols[col.ten] ?? "",
-        maMay: cols[col.maMay] ?? "",
-        nguoiTH: col.nguoiTH>=0 ? (cols[col.nguoiTH] ?? "") : "",
-        bacSi: col.bacSi>=0 ? (cols[col.bacSi] ?? "") : "",
-        maKCB: col.maKCB>=0 ? (cols[col.maKCB] ?? "") : "",
-        start: toDate(cols[col.start]),
-        end: toDate(cols[col.end]),
-      }));
+      if (ext==="xlsx" || ext==="xls"){
+        const buf = await f.arrayBuffer();
+        const wb = XLSX.read(buf, {type:"array", cellDates:true, raw:true});
+        const sheetName = (wb.SheetNames.includes("Sheet1") ? "Sheet1" : wb.SheetNames[0]);
+        const ws = wb.Sheets[sheetName];
+        const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, raw: true, defval: null});
 
-      sourceName = "CSV: " + name;
-      setKPIs(allRows.length, "—", [], sourceName);
-      $("btnRun").disabled = false;
-      return;
-    }
+        let headerRowIdx = -1;
+        for (let r=0;r<Math.min(120, aoa.length);r++){
+          const joined = (aoa[r]||[]).map(x=>safe(x)).join(" | ");
+          if (joined.includes("Ngày thực hiện") && joined.includes("Ngày kết quả")) { headerRowIdx = r; break; }
+        }
+        if (headerRowIdx === -1) headerRowIdx = 0;
 
-    if ((ext==="xlsx" || ext==="xls") && !canReadExcel()){
-      showDiag("Không tải được thư viện XLSX từ CDN (mạng có thể chặn). \n➡️ Cách xử lý: Excel → Save As → CSV UTF-8 → tải CSV vào trang này.", "danger");
+        const headers = (aoa[headerRowIdx]||[]).map(h=>safe(h).trim());
+        const col = mapHeaders(headers);
+
+        const missing = [];
+        if (col.start < 0) missing.push("Ngày thực hiện YL");
+        if (col.end < 0) missing.push("Ngày kết quả");
+        if (col.ten < 0) missing.push("Tên DVKT");
+        if (col.maMay < 0) missing.push("Mã máy");
+        if (missing.length){
+          showDiag("Excel thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra header trong Sheet1.", "danger");
+          $("btnRun").disabled = true;
+          return;
+        }
+
+        const rows = [];
+        for (let r=headerRowIdx+1; r<aoa.length; r++){
+          const row = aoa[r] || [];
+          const nonEmpty = row.some(v => v!=null && safe(v).trim()!=="");
+          if (!nonEmpty) continue;
+          rows.push({row, rownum: r+1});
+        }
+
+        allRows = rows.map((it)=>({
+          rownum: it.rownum,
+          ten: it.row[col.ten] ?? "",
+          maMay: it.row[col.maMay] ?? "",
+          nguoiTH: col.nguoiTH>=0 ? (it.row[col.nguoiTH] ?? "") : "",
+          bacSi: col.bacSi>=0 ? (it.row[col.bacSi] ?? "") : "",
+          maKCB: col.maKCB>=0 ? (it.row[col.maKCB] ?? "") : "",
+          start: toDate(it.row[col.start]),
+          end: toDate(it.row[col.end]),
+        }));
+
+        sourceName = `Excel: ${name} / ${sheetName}`;
+        setKPIs(allRows.length, "—", [], sourceName);
+        $("btnRun").disabled = false;
+        return;
+      }
+
+      showDiag("Định dạng file chưa hỗ trợ. Hãy dùng .xlsx hoặc .csv", "danger");
       $("btnRun").disabled = true;
-      return;
     }
 
-    if (ext==="xlsx" || ext==="xls"){
-      const buf = await f.arrayBuffer();
-      const wb = XLSX.read(buf, {type:"array", cellDates:true, raw:true});
-      const sheetName = (wb.SheetNames.includes("Sheet1") ? "Sheet1" : wb.SheetNames[0]);
-      const ws = wb.Sheets[sheetName];
-      const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, raw: true, defval: null});
-
-      // find header row
-      let headerRowIdx = -1;
-      for (let r=0;r<Math.min(120, aoa.length);r++){
-        const joined = (aoa[r]||[]).map(x=>safe(x)).join(" | ");
-        if (joined.includes("Ngày thực hiện") && joined.includes("Ngày kết quả")) { headerRowIdx = r; break; }
-      }
-      if (headerRowIdx === -1) headerRowIdx = 0;
-
-      const headers = (aoa[headerRowIdx]||[]).map(h=>safe(h).trim());
-      const col = mapHeaders(headers);
-
-      const missing = [];
-      if (col.start < 0) missing.push("Ngày thực hiện YL");
-      if (col.end < 0) missing.push("Ngày kết quả");
-      if (col.ten < 0) missing.push("Tên DVKT");
-      if (col.maMay < 0) missing.push("Mã máy");
-      if (missing.length){
-        showDiag("Excel thiếu cột bắt buộc: " + missing.join(", ") + "\nHãy kiểm tra header trong Sheet1.", "danger");
-        $("btnRun").disabled = true;
+    function runAnalysis(){
+      hideDiag();
+      if (!selectedFile || allRows.length===0){
+        showDiag("Chưa có dữ liệu để phân tích. Hãy chọn file trước.", "danger");
         return;
       }
 
-      const rows = [];
-      for (let r=headerRowIdx+1; r<aoa.length; r++){
-        const row = aoa[r] || [];
-        const nonEmpty = row.some(v => v!=null && safe(v).trim()!=="");
-        if (!nonEmpty) continue;
-        rows.push({row, rownum: r+1});
+      const byService = $("xqByService").checked;
+      const byMachine = $("xqByMachine").checked;
+
+      // 1) lọc XQ
+      const xqAll = allRows.filter(r => isXQ(r, byService, byMachine));
+
+      // 2) lọc theo ngày/giờ trên BĐ
+      xqRows = xqAll.filter(r => isInDateTimeWindow(r.start));
+
+      const opts = {
+        minMinutes: parseInt($("minMinutes").value || "6", 10),
+        roundToMin: parseInt($("roundToMin").value || "1", 10),
+      };
+
+      analyzedErrors = analyzeXQ(xqRows, opts);
+      setKPIs(allRows.length, xqRows.length, analyzedErrors, sourceName);
+      fillTypeFilter(analyzedErrors);
+
+      $("btnExport").disabled = analyzedErrors.length === 0;
+      $("btnExportXlsx").disabled = analyzedErrors.length === 0 || (typeof XLSX === "undefined");
+      $("btnPrint").disabled = analyzedErrors.length === 0;
+
+      renderDetail(analyzedErrors);
+      buildGroupByMachine(analyzedErrors);
+      buildStats(analyzedErrors, allRows.length, xqRows.length, sourceName);
+
+      if (xqAll.length === 0){
+        showDiag("Không tìm thấy dòng X-quang theo tiêu chí đang bật.\n➡️ Thử bật cả 2 tiêu chí hoặc kiểm tra Tên DVKT/Mã máy.", "warning");
+        return;
       }
 
-      allRows = rows.map((it)=>({
-        rownum: it.rownum,
-        ten: it.row[col.ten] ?? "",
-        maMay: it.row[col.maMay] ?? "",
-        nguoiTH: col.nguoiTH>=0 ? (it.row[col.nguoiTH] ?? "") : "",
-        bacSi: col.bacSi>=0 ? (it.row[col.bacSi] ?? "") : "",
-        maKCB: col.maKCB>=0 ? (it.row[col.maKCB] ?? "") : "",
-        start: toDate(it.row[col.start]),
-        end: toDate(it.row[col.end]),
-      }));
-
-      sourceName = `Excel: ${name} / ${sheetName}`;
-      setKPIs(allRows.length, "—", [], sourceName);
-      $("btnRun").disabled = false;
-      return;
+      if (xqRows.length === 0){
+        showDiag("Có dòng X-quang, nhưng sau lọc ngày/giờ thì không còn dòng nào.\n➡️ Kiểm tra Từ/Đến ngày và Giờ từ/đến.", "warning");
+      }
     }
 
-    showDiag("Định dạng file chưa hỗ trợ. Hãy dùng .xlsx hoặc .csv", "danger");
-    $("btnRun").disabled = true;
-  }
-
-  function runAnalysis(){
-    hideDiag();
-    if (!selectedFile || allRows.length===0){
-      showDiag("Chưa có dữ liệu để phân tích. Hãy chọn file trước.", "danger");
-      return;
+    function setXlsxStatus(){
+      const ok = (typeof XLSX !== "undefined");
+      const dot = $("xlsxDot");
+      const txt = $("xlsxText");
+      if (ok){
+        dot.className = "dot ok"; txt.textContent = "OK";
+      }else{
+        dot.className = "dot danger"; txt.textContent = "FAIL";
+      }
+      return ok;
     }
 
-    const byService = $("xqByService").checked;
-    const byMachine = $("xqByMachine").checked;
-    xqRows = allRows.filter(r => isXQ(r, byService, byMachine));
+    function switchTab(which){
+      $("tabDetail").classList.remove("active");
+      $("tabGroup").classList.remove("active");
+      $("tabStats").classList.remove("active");
+      $("viewDetail").classList.add("hidden");
+      $("viewGroup").classList.add("hidden");
+      $("viewStats").classList.add("hidden");
 
-    const opts = {
-      minMinutes: parseInt($("minMinutes").value || "6", 10),
-      roundToMin: parseInt($("roundToMin").value || "1", 10),
-    };
-
-    analyzedErrors = analyzeXQ(xqRows, opts);
-    setKPIs(allRows.length, xqRows.length, analyzedErrors, sourceName);
-    fillTypeFilter(analyzedErrors);
-    $("btnExport").disabled = analyzedErrors.length === 0;
-    render(analyzedErrors);
-
-    if (xqRows.length === 0){
-      showDiag("Không tìm thấy dòng X-quang theo tiêu chí đang bật. Hãy thử bật cả 2 tiêu chí hoặc kiểm tra Tên DVKT/Mã máy trong file.", "warning");
+      if (which==="detail"){ $("tabDetail").classList.add("active"); $("viewDetail").classList.remove("hidden"); }
+      if (which==="group"){ $("tabGroup").classList.add("active"); $("viewGroup").classList.remove("hidden"); }
+      if (which==="stats"){ $("tabStats").classList.add("active"); $("viewStats").classList.remove("hidden"); }
     }
-  }
 
-  $("file").addEventListener("change", async (ev)=>{ await loadDataFromFile(ev.target.files?.[0]); });
-  $("btnRun").addEventListener("click", runAnalysis);
-  $("btnExport").addEventListener("click", ()=>{ if(analyzedErrors.length) exportCSV(analyzedErrors); });
+    $("tabDetail").addEventListener("click", ()=>switchTab("detail"));
+    $("tabGroup").addEventListener("click", ()=>switchTab("group"));
+    $("tabStats").addEventListener("click", ()=>switchTab("stats"));
 
-  $("btnClear").addEventListener("click", ()=>{
-    selectedFile=null; allRows=[]; xqRows=[]; analyzedErrors=[]; sourceName="—";
-    $("file").value="";
-    $("tbody").innerHTML = `<tr><td colspan="12" class="text-muted">Chưa có dữ liệu. Hãy tải file và bấm <b>Phân tích</b>.</td></tr>`;
-    $("typeFilter").innerHTML = `<option value="">(Tất cả)</option>`;
-    $("q").value = "";
-    setKPIs(null, null, null, "—");
-    $("btnExport").disabled = true;
-    $("btnRun").disabled = true;
-    hideDiag();
-  });
+    $("file").addEventListener("change", async (ev)=>{ await loadDataFromFile(ev.target.files?.[0]); });
+    $("btnRun").addEventListener("click", runAnalysis);
+    $("btnExport").addEventListener("click", ()=>{ if(analyzedErrors.length) exportCSV(analyzedErrors); });
 
-  ["q","typeFilter","sortBy"].forEach(id => {
-    $(id).addEventListener("input", ()=>render(analyzedErrors));
-    $(id).addEventListener("change", ()=>render(analyzedErrors));
-  });
+    $("btnExportXlsx").addEventListener("click", ()=>{
+      if (!analyzedErrors.length) return;
+      exportXLSX(analyzedErrors, allRows.length, xqRows.length, sourceName);
+    });
 
-  $("btnCopySummary").addEventListener("click", async ()=>{
-    const types = {};
-    for (const e of analyzedErrors) types[e.type] = (types[e.type]||0)+1;
-    const summary = [
-      `${sourceName}`,
-      `Tổng dòng: ${allRows.length}`,
-      `Dòng X-quang: ${xqRows.length}`,
-      `Tổng lỗi: ${analyzedErrors.length}`,
-      `Phân loại: ` + Object.entries(types).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${t}: ${n}`).join(", ")
-    ].join("\n");
-    try{ await navigator.clipboard.writeText(summary);
-      $("btnCopySummary").textContent="Đã copy ✔";
-      setTimeout(()=>$("btnCopySummary").textContent="Copy tóm tắt", 1200);
-    }catch(e){ showDiag(summary, "warning"); }
-  });
+    $("btnPrint").addEventListener("click", ()=>{
+      if (!analyzedErrors.length) return;
+      window.print();
+    });
 
-  
-  function setXlsxStatus(){
-    const el = $("xlsxStatus");
-    const ok = (typeof XLSX !== "undefined");
-    el.innerHTML = ok
-      ? `✅ Thư viện <b>XLSX</b>: <span style="color:#16a34a;font-weight:700">OK</span> (đọc được .xlsx)`
-      : `❌ Thư viện <b>XLSX</b>: <span style="color:#dc2626;font-weight:700">FAIL</span> (không tải được <span class="smallcode">xlsx.full.min.js</span>).<br>➡️ Đặt file <b>xlsx.full.min.js</b> cùng thư mục với HTML hoặc dùng CSV.`;
-    return ok;
-  }
+    $("btnClear").addEventListener("click", ()=>{
+      selectedFile=null; allRows=[]; xqRows=[]; analyzedErrors=[]; sourceName="—";
+      $("file").value="";
+      $("tbody").innerHTML = `<tr><td colspan="12" class="text-center" style="color:rgba(255,255,255,.62); padding:16px">
+        Chưa có dữ liệu. Hãy tải file và bấm <b>PHÂN TÍCH</b>.
+      </td></tr>`;
+      $("typeFilter").innerHTML = `<option value="">(Tất cả)</option>`;
+      $("q").value = "";
+      $("btnExport").disabled = true;
+      $("btnExportXlsx").disabled = true;
+      $("btnRun").disabled = true;
+      $("btnPrint").disabled = true;
+      hideDiag();
+      $("sourceHint").textContent = "Nguồn dữ liệu: —";
+      setKPIs(null, null, null, "—");
+      $("groupBox").textContent = "Chưa có dữ liệu.";
+      $("statsSummary").textContent = "Chưa có dữ liệu.";
+      $("tbType").innerHTML = "";
+      $("tbMachine").innerHTML = "";
+      $("tbDay").innerHTML = "";
+      switchTab("detail");
+    });
 
-  $("btnCheckXlsx").addEventListener("click", ()=>{
-    const ok = setXlsxStatus();
-    if(ok) hideDiag();
-    else showDiag("Không thấy thư viện XLSX. Hãy đảm bảo file xlsx.full.min.js nằm cùng thư mục với index.html (Cách 2).", "danger");
-  });
-
-// Startup hint
-  window.addEventListener("load", ()=>{
-    setXlsxStatus();
-    if (!canReadExcel()){
-      showDiag("Lưu ý: Không tải được thư viện XLSX từ CDN. Bạn vẫn có thể dùng file CSV (Excel → Save As → CSV UTF-8).", "warning");
+    function rerenderAll(){
+      renderDetail(analyzedErrors);
+      buildGroupByMachine(analyzedErrors);
+      buildStats(analyzedErrors, allRows.length, xqRows.length, sourceName);
     }
-  });
-</script>
+
+    ["q","typeFilter","sortBy"].forEach(id => {
+      $(id).addEventListener("input", rerenderAll);
+      $(id).addEventListener("change", rerenderAll);
+    });
+
+    $("btnCopySummary").addEventListener("click", async ()=>{
+      const types = {};
+      for (const e of analyzedErrors) types[e.type] = (types[e.type]||0)+1;
+      const summary = [
+        `${sourceName}`,
+        `Tổng dòng: ${allRows.length}`,
+        `Dòng X-quang (sau lọc): ${xqRows.length}`,
+        `Tổng lỗi: ${analyzedErrors.length}`,
+        `Lọc ngày: ${$("fromDate").value||"(không)"} → ${$("toDate").value||"(không)"}`,
+        `Lọc giờ: ${$("fromTime").value||"00:00"} → ${$("toTime").value||"23:59"}`,
+        `Phân loại: ` + Object.entries(types).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${t}: ${n}`).join(", ")
+      ].join("\n");
+
+      try{
+        await navigator.clipboard.writeText(summary);
+        const btn = $("btnCopySummary");
+        btn.textContent="Đã copy ✔";
+        setTimeout(()=>btn.textContent="📋 Copy tóm tắt", 1100);
+      }catch(e){
+        showDiag(summary, "warning");
+      }
+    });
+
+    $("btnCheckXlsx").addEventListener("click", ()=>{
+      const ok = setXlsxStatus();
+      if(ok) hideDiag();
+      else showDiag("Không thấy thư viện XLSX.\n➡️ Đặt file xlsx.full.min.js cùng thư mục với index.html (offline/GitHub Pages), hoặc dùng CSV.", "danger");
+    });
+
+    // Startup
+    window.addEventListener("load", ()=>{
+      setXlsxStatus();
+      if (!canReadExcel()){
+        showDiag("Lưu ý: Không đọc/xuất Excel vì thiếu xlsx.full.min.js.\nBạn vẫn dùng được CSV: Excel → Save As → CSV UTF-8.", "warning");
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
