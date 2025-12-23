@@ -1910,10 +1910,7 @@ for (const [key, arr] of mapStart.entries()) {
 <div style="margin-top:12px;">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
     <div style="font-weight:900;color:#0f172a;">📌 Danh sách đã chỉnh (trong phiên làm việc)</div>
-    <div style="display:flex;gap:8px;align-items:center;">
-  <button class="btn btn-outline-light" type="button" id="btnDownloadAppliedXLSX" style="border-color:#cbd5e1;">⬇️ Tải DS đã sửa (Excel)</button>
-  <button class="btn btn-outline-light" type="button" id="btnToggleApplied" style="border-color:#cbd5e1;">Ẩn/Hiện</button>
-</div>
+    <button class="btn btn-outline-light" type="button" id="btnToggleApplied" style="border-color:#cbd5e1;">Ẩn/Hiện</button>
   </div>
   <div id="appliedFixesWrap" style="margin-top:8px;display:block;">
     <div style="overflow:auto;border:1px solid #e2e8f0;border-radius:14px;">
@@ -2525,64 +2522,6 @@ Phút: ${s.dur}`;
       return (window.applyFixSuggestion) ? window.applyFixSuggestion() : undefined;
     }
   }
-</script>
-<script>
-  function downloadAppliedFixesXLSX(){
-    try{
-      if(typeof XLSX === "undefined"){
-        alert("Chưa có thư viện XLSX. Hãy đặt file xlsx.full.min.js cùng thư mục và tải lại trang.");
-        return;
-      }
-      const list = (window.__appliedFixes && Array.isArray(window.__appliedFixes)) ? window.__appliedFixes : [];
-      if(!list.length){
-        alert("Chưa có chỉnh sửa nào để tải.");
-        return;
-      }
-
-      const rows = list.map((it, idx)=>({
-        "STT": idx + 1,
-        "Dòng": it.rownum ?? "",
-        "Máy": it.machine ?? "",
-        "Mã KCB": it.maKCB ?? "",
-        "BĐ cũ": it.oldStart ?? "",
-        "BĐ mới": it.newStart ?? "",
-        "KT cũ": it.oldEnd ?? "",
-        "KT mới": it.newEnd ?? "",
-        "Lúc áp dụng": it.appliedAt ?? ""
-      }));
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rows, {skipHeader:false});
-
-      const colKeys = Object.keys(rows[0] || {});
-      ws["!cols"] = colKeys.map(k=>{
-        let w = k.length;
-        for(const r of rows){
-          const v = String(r[k] ?? "");
-          if(v.length > w) w = Math.min(60, v.length);
-        }
-        return { wch: w + 2 };
-      });
-
-      XLSX.utils.book_append_sheet(wb, ws, "DS_da_sua");
-
-      const pad = (n)=> String(n).padStart(2,"0");
-      const d = new Date();
-      const fname = `BVST_DS_da_sua_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
-      XLSX.writeFile(wb, fname);
-    }catch(err){
-      console.error(err);
-      alert("Không xuất được Excel: " + (err?.message || err));
-    }
-  }
-
-  (function(){
-    const btn = document.getElementById("btnDownloadAppliedXLSX");
-    if(btn && !btn.__bound){
-      btn.addEventListener("click", downloadAppliedFixesXLSX);
-      btn.__bound = true;
-    }
-  })();
 </script>
 </body>
 </html>
