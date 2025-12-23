@@ -608,6 +608,48 @@ input, select, textarea, .form-control, .form-select {
 /* ===== End modal ===== */
 
 </style>
+<script>
+  // ===== CONFIRMED_EDITS: lưu chỉnh sửa và luôn áp vào phân tích =====
+  const CONFIRMED_EDITS_KEY = "bv_xq_confirmed_edits_v1";
+  window.__confirmedEdits = window.__confirmedEdits || new Map();
+
+  function saveConfirmedEdits(){
+    try{
+      const arr = Array.from(window.__confirmedEdits.entries()).map(([rownum, v])=>({
+        rownum,
+        start_ms: v.start_ms,
+        end_ms: v.end_ms,
+        updated_at: v.updated_at || Date.now()
+      }));
+      localStorage.setItem(CONFIRMED_EDITS_KEY, JSON.stringify(arr));
+    }catch(e){ /* ignore */ }
+  }
+
+  function loadConfirmedEdits(){
+    try{
+      const raw = localStorage.getItem(CONFIRMED_EDITS_KEY);
+      if(!raw) return;
+      const arr = JSON.parse(raw);
+      if(!Array.isArray(arr)) return;
+      window.__confirmedEdits = new Map(arr.map(it => [Number(it.rownum), it]));
+    }catch(e){ /* ignore */ }
+  }
+
+  function applyConfirmedEditsToRows(rows){
+    if(!Array.isArray(rows) || !window.__confirmedEdits) return;
+    if(window.__confirmedEdits.size === 0) return;
+    for(const r of rows){
+      const v = window.__confirmedEdits.get(r.rownum);
+      if(!v) continue;
+      if(typeof v.start_ms === "number") r.start = new Date(v.start_ms);
+      if(typeof v.end_ms === "number") r.end = new Date(v.end_ms);
+    }
+  }
+
+  // Load once at startup
+  loadConfirmedEdits();
+  // ===== END CONFIRMED_EDITS =====
+</script>
 </head>
 
 <body>
@@ -1659,6 +1701,7 @@ for (const [key, arr] of mapStart.entries()) {
       const xqAll = allRows.filter(r => isXQ(r, byService, byMachine));
       xqRows = xqAll.filter(r => isInDateTimeWindow(r.start));
 
+      applyConfirmedEditsToRows(xqRows);
       analyzedErrors = analyzeXQ(xqRows);
       window.xqRows = xqRows;
       window.allRows = allRows;
@@ -1817,6 +1860,14 @@ for (const [key, arr] of mapStart.entries()) {
 </script>
 
 
+<script>
+  // esc2: escape an toàn, luôn tồn tại
+  function esc2(s){
+    try{ return (typeof escapeHtml==="function") ? escapeHtml(s) : String(s??""); }
+    catch(e){ return String(s??""); }
+  }
+</script>
+
 <!-- ===== FIX SUGGESTION MODAL ===== -->
 <div id="fixBackdrop" class="bv-modal-backdrop" aria-hidden="true"></div>
 <div id="fixModal" class="bv-modal" role="dialog" aria-modal="true" aria-labelledby="fixTitle">
@@ -1856,12 +1907,45 @@ for (const [key, arr] of mapStart.entries()) {
       </div>
 
       <div class="note" id="fixNote" style="display:none"></div>
+<div style="margin-top:12px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div style="font-weight:900;color:#0f172a;">📌 Danh sách đã chỉnh (trong phiên làm việc)</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+  <button class="btn btn-outline-light" type="button" id="btnDownloadAppliedXLSX" style="border-color:#cbd5e1;">⬇️ Tải DS đã sửa (Excel)</button>
+  <button class="btn btn-outline-light" type="button" id="btnToggleApplied" style="border-color:#cbd5e1;">Ẩn/Hiện</button>
+</div>
+  </div>
+  <div id="appliedFixesWrap" style="margin-top:8px;display:block;">
+    <div style="overflow:auto;border:1px solid #e2e8f0;border-radius:14px;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+          <tr>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Dòng</th>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Máy</th>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Mã KCB</th>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">BĐ cũ → mới</th>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">KT cũ → mới</th>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Lúc áp dụng</th>
+          </tr>
+        </thead>
+        <tbody id="appliedFixesBody">
+          <tr><td colspan="6" style="padding:10px;color:#64748b;">Chưa có chỉnh sửa nào.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:6px;color:#475569;font-size:12.5px;">
+      * Danh sách này được lưu (localStorage) để bấm PHÂN TÍCH lại vẫn giữ. Không ghi vào file Excel gốc.
+    </div>
+  </div>
+</div>
     </div>
 
     <div class="bv-modal-footer">
       <button class="btn btn-outline-warning" type="button" id="btnFixNext">🔁 Đổi đề xuất</button>
       <button class="btn btn-outline-light" type="button" id="btnFixCopy">📋 Copy đề xuất</button>
-      <button class="btn btn-primary" type="button" id="btnFixClose2">✅ Xong</button>
+      <button class="btn btn-success" type="button" id="btnFixApply" onclick="window.applyFixSuggestion&&window.applyFixSuggestion()" onclick="try{window.applyFixSuggestion&&window.window.applyFixSuggestion && window.applyFixSuggestion();}catch(e){console.error(e);alert(\'Lỗi Áp dụng: \'+(e&&e.message?e.message:e));}">✅ Áp dụng thời gian này</button>
+        <span id="fixApplyStatus" style="margin-left:10px;font-size:13px;color:#64748b;">⏳ Chưa áp dụng</span>
+        <button class="btn btn-primary" type="button" id="btnFixClose2">✅ Xong</button>
     </div>
   </div>
 </div>
@@ -1992,7 +2076,9 @@ return false;
   }
 
   function renderFix(){
-    const s = __fixState.list[__fixState.idx];
+    const st = (window.__fixState || __fixState);
+    const s = st.list[st.idx];
+    __fixState = st;
     const noteBox = document.getElementById("fixNote");
 
     if(!__fixState.list.length){
@@ -2073,6 +2159,7 @@ return false;
 
     const res = computeFixSuggestions(row, window.xqRows || []);
     __fixState = { list: res.list, idx: 0, rownum };
+    window.__fixState = __fixState;
     window.__fixNoteText = res.note || "";
 
     renderFix();
@@ -2087,12 +2174,15 @@ return false;
   if($id("btnFixNext")) $id("btnFixNext").addEventListener("click", ()=>{
     if(!__fixState.list.length) return;
     __fixState.idx = (__fixState.idx + 1) % __fixState.list.length;
+    window.__fixState = __fixState;
     renderFix();
   });
 
   if($id("btnFixCopy")) $id("btnFixCopy").addEventListener("click", async ()=>{
     if(!__fixState.list.length) return;
-    const s = __fixState.list[__fixState.idx];
+    const st = (window.__fixState || __fixState);
+    const s = st.list[st.idx];
+    __fixState = st;
     const txt = `DeXuatThoiGian
 BĐ: ${fmtLocal(s.start)}
 KT: ${fmtLocal(s.end)}
@@ -2123,5 +2213,376 @@ Phút: ${s.dur}`;
 
 
 
+<script>
+  // ===== Apply suggestion + Applied list =====
+  window.__appliedFixes = window.__appliedFixes || [];
+
+  function renderAppliedFixes(){
+    const tb = document.getElementById("appliedFixesBody");
+    if(!tb) return;
+    const list = window.__appliedFixes || [];
+    if(!list.length){
+      tb.innerHTML = '<tr><td colspan="6" style="padding:10px;color:#64748b;">Chưa có chỉnh sửa nào.</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.slice().reverse().map(it => {
+      const bdOld = it.oldStart || "—";
+      const bdNew = it.newStart || "—";
+      const ktOld = it.oldEnd || "—";
+      const ktNew = it.newEnd || "—";
+      return `
+        <tr style="border-top:1px solid #eef2f7;">
+          <td style="padding:8px 10px;white-space:nowrap;font-weight:900;">${it.rownum}</td>
+          <td style="padding:8px 10px;white-space:nowrap;">${esc2(it.machine||"")}</td>
+          <td style="padding:8px 10px;white-space:nowrap;">${esc2(it.maKCB||"")}</td>
+          <td style="padding:8px 10px;white-space:nowrap;" class="mono">${esc2(bdOld)} → <b>${esc2(bdNew)}</b></td>
+          <td style="padding:8px 10px;white-space:nowrap;" class="mono">${esc2(ktOld)} → <b>${esc2(ktNew)}</b></td>
+          <td style="padding:8px 10px;white-space:nowrap;color:#475569;">${esc2(it.appliedAt||"")}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function applyFixSuggestionImpl(){
+    try{ if(typeof showDiag==='function') showDiag('Đang áp dụng thời gian đề xuất...', 'warning'); }catch(e){}
+
+    if(!window.__fixState || !window.__fixState.list || !window.__fixState.list.length){
+      if(typeof showDiag==="function") showDiag("Không có đề xuất hợp lệ để áp dụng.", "warning");
+      return;
+    }
+    const pick = window.__fixState.list[window.__fixState.idx || 0];
+    const rownum = window.__fixState.rownum;
+
+    if(!window.__rowIndex){
+      window.__rowIndex = new Map();
+      if(Array.isArray(window.xqRows)) for(const r of window.xqRows){ window.__rowIndex.set(r.rownum, r); }
+    }
+    const row = window.__rowIndex.get(rownum);
+    if(!row){
+      if(typeof showDiag==="function") showDiag("Không tìm thấy dòng dữ liệu để áp dụng.", "warning");
+      return;
+    }
+
+    const oldStart = row.start ? fmtLocal(row.start) : "—";
+    const oldEnd   = row.end   ? fmtLocal(row.end)   : "—";
+
+    // Update in-memory times
+    row.start = pick.start;
+    row.end   = pick.end;
+
+    // Lưu chỉnh sửa đã xác nhận (để lần bấm PHÂN TÍCH sau vẫn giữ)
+    window.__confirmedEdits = window.__confirmedEdits || new Map();
+    window.__confirmedEdits.set(rownum, {
+      start_ms: pick.start.getTime(),
+      end_ms: pick.end.getTime(),
+      updated_at: Date.now()
+    });
+    try{ saveConfirmedEdits(); }catch(e){}
+    // verify saved
+    try{ const _t = localStorage.getItem(CONFIRMED_EDITS_KEY); if(!_t) throw new Error('localStorage empty'); }catch(e){ console.warn(e); }
+    try{ if(typeof showDiag==='function') showDiag('✅ Đã áp dụng & lưu chỉnh sửa. Bấm PHÂN TÍCH để tính lại số lỗi.', 'ok'); }catch(e){}
+
+    // Also update in xqRows array (same reference usually; but ensure)
+    if(Array.isArray(window.xqRows)){
+      const idx = window.xqRows.findIndex(x => x.rownum === rownum);
+      if(idx >= 0) window.xqRows[idx] = row;
+    }
+
+    const machine = (row.maMay||"").trim().toUpperCase();
+    const maKCB = row.maKCB || "";
+
+    window.__appliedFixes.push({
+      rownum,
+      machine,
+      maKCB,
+      oldStart,
+      oldEnd,
+      newStart: fmtLocal(pick.start),
+      newEnd: fmtLocal(pick.end),
+      appliedAt: new Date().toLocaleString()
+    });
+
+    renderAppliedFixes();
+
+    // Rerun analysis so next suggestions avoid conflicts created by this change
+    if(typeof runAnalysis === "function"){
+      try{ runAnalysis(); }catch(e){ console.error(e); }
+    }
+
+    if(typeof showDiag==="function"){
+      showDiag("Đã áp dụng thời gian đề xuất và cập nhật lại phân tích.", "ok");
+      setTimeout(()=>{ try{ hideDiag(); }catch(e){} }, 1200);
+    }
+
+    // Close modal to encourage picking next error
+    try{ closeFixModal(); }catch(e){}
+  }
+
+  // Bind buttons
+  (function(){
+    const btn = document.getElementById("btnFixApply");
+    if(btn) btn.addEventListener("click", applyFixSuggestion);
+
+    const tgl = document.getElementById("btnToggleApplied");
+    const wrap = document.getElementById("appliedFixesWrap");
+    if(tgl && wrap){
+      tgl.addEventListener("click", ()=>{
+        wrap.style.display = (wrap.style.display === "none") ? "block" : "none";
+      });
+    }
+  })();
+
+  // When modal opens (renderFix), refresh applied list
+  const __origOpenFixModal = (typeof openFixModal === "function") ? openFixModal : null;
+  if(__origOpenFixModal){
+    window.openFixModal = function(){
+      renderAppliedFixes();
+      __origOpenFixModal();
+    }
+  }
+</script>
+<script>
+  // ===== bindFixModalButtons_v2: đảm bảo nút Áp dụng hoạt động dù script chạy sớm/muộn =====
+  function bindFixModalButtons_v2(){
+    const btnApply = document.getElementById("btnFixApply");
+    if(btnApply && !btnApply.__bound){
+      btnApply.addEventListener("click", ()=>{
+        try{ window.applyFixSuggestion && window.applyFixSuggestion(); }catch(e){ console.error(e); alert("Lỗi khi áp dụng: " + (e?.message||e)); }
+      });
+      btnApply.__bound = true;
+    }
+    const btnToggle = document.getElementById("btnToggleApplied");
+    const wrap = document.getElementById("appliedFixesWrap");
+    if(btnToggle && wrap && !btnToggle.__bound){
+      btnToggle.addEventListener("click", ()=>{
+        wrap.style.display = (wrap.style.display === "none") ? "block" : "none";
+      });
+      btnToggle.__bound = true;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", bindFixModalButtons_v2);
+
+  // Rebind every time modal opens
+  if(typeof openFixModal === "function"){
+    const __open = openFixModal;
+    window.openFixModal = function(){
+      bindFixModalButtons_v2();
+      return __open();
+    };
+  }
+</script>
+<script>
+  function setApplyStatus(text, color){
+    const el = document.getElementById("fixApplyStatus");
+    if(!el) return;
+    el.textContent = text;
+    if(color) el.style.color = color;
+  }
+  // Hook into global apply
+  if(window.applyFixSuggestion){
+    const __oldApply = window.applyFixSuggestion;
+    window.applyFixSuggestion = function(){
+      setApplyStatus("⏳ Đang áp dụng...", "#d97706");
+      try{
+        const r = __oldApply();
+        setTimeout(()=>setApplyStatus("✅ Đã áp dụng", "#16a34a"), 50);
+        return r;
+      }catch(e){
+        setApplyStatus("❌ Lỗi áp dụng", "#dc2626");
+        throw e;
+      }
+    }
+  }
+</script>
+<script>
+  // ===== FINAL APPLY OVERRIDE (v16) =====
+  (function(){
+    function $id(x){ return document.getElementById(x); }
+    function setStatus(t, c){
+      const el = $id("fixApplyStatus");
+      if(!el) return;
+      el.textContent = t;
+      if(c) el.style.color = c;
+    }
+    function fmtLocal2(dt){
+      try{ return (typeof fmt === "function") ? fmt(dt) : (dt?dt.toLocaleString(): ""); }catch(e){ return dt?dt.toLocaleString():""; }
+    }
+    function esc(s){
+      try{ return (typeof escapeHtml==="function") ? escapeHtml(s) : String(s??""); }catch(e){ return String(s??""); }
+    }
+    const KEY = "bv_xq_confirmed_edits_v1";
+    function saveEdits(map){
+      try{
+        const arr = Array.from(map.entries()).map(([rownum,v])=>({rownum, start_ms:v.start_ms, end_ms:v.end_ms, updated_at:v.updated_at||Date.now()}));
+        localStorage.setItem(KEY, JSON.stringify(arr));
+      }catch(e){ console.warn(e); }
+    }
+    function ensureIndex(){
+      if(!window.__rowIndex){
+        window.__rowIndex = new Map();
+        if(Array.isArray(window.xqRows)) for(const r of window.xqRows){ window.__rowIndex.set(r.rownum, r); }
+      }
+    }
+    function appendAppliedRow(item){
+      const tb = $id("appliedFixesBody");
+      if(!tb) return;
+      // if placeholder row exists, clear
+      if(tb.querySelector("td[colspan]")) tb.innerHTML = "";
+      const tr = document.createElement("tr");
+      tr.style.borderTop = "1px solid #eef2f7";
+      tr.innerHTML = `
+        <td style="padding:8px 10px;white-space:nowrap;font-weight:900;">${item.rownum}</td>
+        <td style="padding:8px 10px;white-space:nowrap;">${esc(item.machine||"")}</td>
+        <td style="padding:8px 10px;white-space:nowrap;">${esc(item.maKCB||"")}</td>
+        <td style="padding:8px 10px;white-space:nowrap;" class="mono">${esc(item.oldStart)} → <b>${esc(item.newStart)}</b></td>
+        <td style="padding:8px 10px;white-space:nowrap;" class="mono">${esc(item.oldEnd)} → <b>${esc(item.newEnd)}</b></td>
+        <td style="padding:8px 10px;white-space:nowrap;color:#475569;">${esc(item.appliedAt)}</td>
+      `;
+      // add to top
+      tb.insertBefore(tr, tb.firstChild);
+    }
+
+    window.applyFixSuggestion = function(){
+      try{
+        setStatus("⏳ Đang áp dụng...", "#d97706");
+        const st = window.__fixState || window.__fixState || __fixState;
+        if(!st || !st.list || !st.list.length) throw new Error("Chưa có đề xuất hợp lệ.");
+        const pick = st.list[st.idx || 0];
+        const rownum = st.rownum;
+        if(!rownum) throw new Error("Thiếu rownum.");
+        ensureIndex();
+        const row = window.__rowIndex.get(rownum);
+        if(!row) throw new Error("Không tìm thấy dòng dữ liệu để áp dụng (rownum=" + rownum + ").");
+
+        const oldStart = row.start ? fmtLocal2(row.start) : "—";
+        const oldEnd = row.end ? fmtLocal2(row.end) : "—";
+
+        // apply
+        row.start = pick.start;
+        row.end = pick.end;
+
+        // persist to confirmed edits
+        window.__confirmedEdits = window.__confirmedEdits || new Map();
+        window.__confirmedEdits.set(rownum, { start_ms: pick.start.getTime(), end_ms: pick.end.getTime(), updated_at: Date.now() });
+        saveEdits(window.__confirmedEdits);
+
+        // update applied list
+        const item = {
+          rownum,
+          machine: (row.maMay||"").trim().toUpperCase(),
+          maKCB: row.maKCB || "",
+          oldStart,
+          oldEnd,
+          newStart: fmtLocal2(pick.start),
+          newEnd: fmtLocal2(pick.end),
+          appliedAt: new Date().toLocaleString()
+        };
+        window.__appliedFixes = window.__appliedFixes || [];
+        window.__appliedFixes.push(item);
+        appendAppliedRow(item);
+
+        // re-run analysis
+        if(typeof runAnalysis === "function"){
+          try{ runAnalysis(); }catch(e){ console.error(e); }
+        }
+
+        setStatus("✅ Đã áp dụng", "#16a34a");
+      }catch(err){
+        console.error(err);
+        setStatus("❌ Lỗi áp dụng", "#dc2626");
+        alert("Áp dụng thất bại: " + (err?.message || err));
+      }
+    };
+
+    // Ensure button click wired even if onclick lost
+    function wire(){
+      const btn = $id("btnFixApply");
+      if(btn && !btn.__wired){
+        btn.addEventListener("click", ()=>window.applyFixSuggestion());
+        btn.__wired = true;
+      }
+    }
+    document.addEventListener("DOMContentLoaded", wire);
+    // Also try now
+    wire();
+  })();
+  // ===== END FINAL APPLY OVERRIDE =====
+</script>
+<script>
+  // Stub để tránh lỗi ReferenceError nếu còn chỗ nào gọi applyFixSuggestionImpl
+  if(typeof applyFixSuggestionImpl === "undefined"){
+    function applyFixSuggestionImpl(){
+      if(window.applyFixSuggestion) return window.applyFixSuggestion();
+      throw new Error("applyFixSuggestion chưa sẵn sàng");
+    }
+  }
+</script>
+<script>
+  // Alias để tương thích các chỗ còn gọi applyFixSuggestion()
+  if(typeof applyFixSuggestion === "undefined"){
+    function applyFixSuggestion(){
+      return (window.applyFixSuggestion) ? window.applyFixSuggestion() : undefined;
+    }
+  }
+</script>
+<script>
+  function downloadAppliedFixesXLSX(){
+    try{
+      if(typeof XLSX === "undefined"){
+        alert("Chưa có thư viện XLSX. Hãy đặt file xlsx.full.min.js cùng thư mục và tải lại trang.");
+        return;
+      }
+      const list = (window.__appliedFixes && Array.isArray(window.__appliedFixes)) ? window.__appliedFixes : [];
+      if(!list.length){
+        alert("Chưa có chỉnh sửa nào để tải.");
+        return;
+      }
+
+      const rows = list.map((it, idx)=>({
+        "STT": idx + 1,
+        "Dòng": it.rownum ?? "",
+        "Máy": it.machine ?? "",
+        "Mã KCB": it.maKCB ?? "",
+        "BĐ cũ": it.oldStart ?? "",
+        "BĐ mới": it.newStart ?? "",
+        "KT cũ": it.oldEnd ?? "",
+        "KT mới": it.newEnd ?? "",
+        "Lúc áp dụng": it.appliedAt ?? ""
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows, {skipHeader:false});
+
+      const colKeys = Object.keys(rows[0] || {});
+      ws["!cols"] = colKeys.map(k=>{
+        let w = k.length;
+        for(const r of rows){
+          const v = String(r[k] ?? "");
+          if(v.length > w) w = Math.min(60, v.length);
+        }
+        return { wch: w + 2 };
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws, "DS_da_sua");
+
+      const pad = (n)=> String(n).padStart(2,"0");
+      const d = new Date();
+      const fname = `BVST_DS_da_sua_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
+      XLSX.writeFile(wb, fname);
+    }catch(err){
+      console.error(err);
+      alert("Không xuất được Excel: " + (err?.message || err));
+    }
+  }
+
+  (function(){
+    const btn = document.getElementById("btnDownloadAppliedXLSX");
+    if(btn && !btn.__bound){
+      btn.addEventListener("click", downloadAppliedFixesXLSX);
+      btn.__bound = true;
+    }
+  })();
+</script>
 </body>
 </html>
