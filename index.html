@@ -607,6 +607,190 @@ input, select, textarea, .form-control, .form-select {
 }
 /* ===== End modal ===== */
 
+/* ===== Modal layout fix: footer luôn nhìn thấy ===== */
+.bv-modal{
+  display:none;
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(980px, calc(100vw - 24px));
+  max-height:calc(100vh - 24px);
+  overflow:hidden;
+  border-radius:18px;
+}
+.bv-modal .bv-modal-card{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  max-height:calc(100vh - 24px);
+}
+.bv-modal .bv-modal-body{
+  flex:1 1 auto;
+  overflow:auto;
+  padding-bottom:84px; /* chừa chỗ cho footer */
+}
+.bv-modal .bv-modal-footer{
+  flex:0 0 auto;
+  position:sticky;
+  bottom:0;
+  background:rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+  border-top:1px solid rgba(148,163,184,.35);
+  padding:10px 12px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  z-index:3;
+}
+@media (max-width: 720px){
+  .bv-modal .bv-modal-footer{ flex-wrap:wrap; justify-content:center; }
+  .bv-modal .bv-modal-body{ padding-bottom:110px; }
+}
+
+/* ===== BV FOOTER STANDARD (Hospital) ===== */
+.bv-footer{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:space-between;
+}
+.bv-footer-status{
+  flex:1 1 240px;
+  text-align:center;
+  font-size:.9rem;
+  font-weight:700;
+  color:#475569;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  border-radius:999px;
+  padding:6px 12px;
+}
+.bv-footer-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.bv-footer-actions .btn{font-weight:800;}
+@media (max-width: 720px){
+  .bv-footer-status{order:-1; flex:1 1 100%;}
+  .bv-footer-actions{justify-content:center;}
+}
+/* ===== END BV FOOTER STANDARD ===== */
+
+
+/* ===== FINAL MODAL OVERRIDE (BV) - always above fixed bottom bars ===== */
+.bv-modal-backdrop{
+  z-index: 20000 !important;
+}
+.bv-modal{
+  z-index: 20001 !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 12px !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+.bv-modal.show{ display:flex !important; }
+
+.bv-modal .bv-modal-dialog,
+.bv-modal .bv-modal-card{
+  width: min(980px, calc(100vw - 24px)) !important;
+  max-height: calc(100vh - 24px) !important;
+  margin: 0 !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  border: 1px solid #c7d2fe !important;
+  box-shadow: 0 30px 80px rgba(2,6,23,.25) !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+.bv-modal .bv-modal-body{
+  flex: 1 1 auto !important;
+  overflow: auto !important;
+  padding-bottom: 130px !important; /* chừa chỗ cho footer + màn hình nhỏ */
+}
+
+.bv-modal .bv-modal-footer{
+  flex: 0 0 auto !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  background: rgba(255,255,255,.98) !important;
+  border-top: 1px solid rgba(148,163,184,.45) !important;
+  backdrop-filter: blur(10px) !important;
+  z-index: 5 !important;
+}
+/* Mobile: footer wrap + status full width */
+@media (max-width: 768px){
+  .bv-modal .bv-modal-footer{ flex-wrap: wrap !important; justify-content:center !important; }
+  .bv-modal .bv-footer-status{ width:100% !important; text-align:center !important; order:-1 !important; }
+  .bv-modal .bv-modal-body{ padding-bottom: 170px !important; }
+}
+/* ===== END FINAL MODAL OVERRIDE ===== */
+
+
+
+/* ===== BV: Expand error table to show more rows (full-height right panel) ===== */
+html, body { height: 100%; }
+.app-shell{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.grid{
+  flex: 1 1 auto;
+  min-height: 0; /* allow children to shrink and scroll */
+}
+
+/* Right panel becomes a column layout, table fills remaining height */
+.right-panel{
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#filterBar{ flex: 0 0 auto; }
+#viewDetail, #viewGroup, #viewStats{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Table wrapper fills panel; internal scroll inside table area */
+#viewDetail{
+  display: flex;
+  flex-direction: column;
+}
+#viewDetail .table-wrap{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#viewDetail .table-responsive{
+  max-height: none !important;
+  height: 100%;
+}
+
+/* Make rows more compact to see more cases at once */
+.table.table-sm > :not(caption) > * > *{ padding: .25rem .45rem; }
+.table td{ font-size: .84rem; }
+.table thead th{ font-size: .78rem; }
+
+/* Keep sticky header visible with border */
+.table thead th{
+  top: 0;
+}
+
+/* ===== END Expand ===== */
+
 </style>
 <script>
   // ===== CONFIRMED_EDITS: lưu chỉnh sửa và luôn áp vào phân tích =====
@@ -653,6 +837,8 @@ input, select, textarea, .form-control, .form-select {
 </head>
 
 <body>
+
+
   <div class="app-shell">
     <div class="topbar">
       <div class="brand">
@@ -777,6 +963,12 @@ input, select, textarea, .form-control, .form-select {
               <div class="tabbtn active" id="tabDetail">📋 Bảng lỗi</div>
               <div class="tabbtn" id="tabGroup">🧩 Nhóm theo máy</div>
               <div class="tabbtn" id="tabStats">📈 Thống kê</div>
+<!-- DOWNLOAD_APPLIED_BTN -->
+<div class="tabbtn" id="btnDownloadAppliedXLSX" title="Xuất danh sách ca đã chỉnh thời gian"
+     style="margin-left:8px;background:#dcfce7;border:1px solid #22c55e;color:#065f46;opacity:.65;cursor:not-allowed;user-select:none;">
+  ✅ Xuất DS đã chỉnh
+</div>
+<!-- END_DOWNLOAD_APPLIED_BTN -->
             </div>
             <div class="small-muted mt-2">Dropdown “Loại lỗi” đã khóa đúng 3 loại chuẩn BV.</div>
           </div>
@@ -784,7 +976,7 @@ input, select, textarea, .form-control, .form-select {
       </div>
 
       <!-- RIGHT -->
-      <div class="glass cardx">
+      <div class="glass cardx right-panel">
         <div class="section-title">
           <div>
             <h2>2) Kết quả</h2>
@@ -1871,12 +2063,12 @@ for (const [key, arr] of mapStart.entries()) {
 <!-- ===== FIX SUGGESTION MODAL ===== -->
 <div id="fixBackdrop" class="bv-modal-backdrop" aria-hidden="true"></div>
 <div id="fixModal" class="bv-modal" role="dialog" aria-modal="true" aria-labelledby="fixTitle">
-  <div class="bv-modal-dialog">
+  <div class="bv-modal-dialog bv-modal-card">
     <div class="bv-modal-header">
       <h3 class="bv-modal-title" id="fixTitle">🛠 Đề xuất thời gian sửa (tránh 3 lỗi)</h3>
       <button class="btn btn-outline-light" type="button" id="btnFixClose" style="border-color:#cbd5e1;color:#0f172a;background:#fff">✖ Đóng</button>
     </div>
-    <div class="bv-modal-body">
+    <div class="bv-modal-body bv-modal-body">
       <div class="kv">
         <div class="box">
           <div class="lab">Ca lỗi</div>
@@ -1910,7 +2102,10 @@ for (const [key, arr] of mapStart.entries()) {
 <div style="margin-top:12px;">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
     <div style="font-weight:900;color:#0f172a;">📌 Danh sách đã chỉnh (trong phiên làm việc)</div>
-    <button class="btn btn-outline-light" type="button" id="btnToggleApplied" style="border-color:#cbd5e1;">Ẩn/Hiện</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+  
+  <button class="btn btn-outline-light" type="button" id="btnToggleApplied" style="border-color:#cbd5e1;">Ẩn/Hiện</button>
+</div>
   </div>
   <div id="appliedFixesWrap" style="margin-top:8px;display:block;">
     <div style="overflow:auto;border:1px solid #e2e8f0;border-radius:14px;">
@@ -1937,12 +2132,18 @@ for (const [key, arr] of mapStart.entries()) {
 </div>
     </div>
 
-    <div class="bv-modal-footer">
-      <button class="btn btn-outline-warning" type="button" id="btnFixNext">🔁 Đổi đề xuất</button>
-      <button class="btn btn-outline-light" type="button" id="btnFixCopy">📋 Copy đề xuất</button>
-      <button class="btn btn-success" type="button" id="btnFixApply" onclick="window.applyFixSuggestion&&window.applyFixSuggestion()" onclick="try{window.applyFixSuggestion&&window.window.applyFixSuggestion && window.applyFixSuggestion();}catch(e){console.error(e);alert(\'Lỗi Áp dụng: \'+(e&&e.message?e.message:e));}">✅ Áp dụng thời gian này</button>
-        <span id="fixApplyStatus" style="margin-left:10px;font-size:13px;color:#64748b;">⏳ Chưa áp dụng</span>
-        <button class="btn btn-primary" type="button" id="btnFixClose2">✅ Xong</button>
+        <div class="bv-modal-footer bv-footer">
+      <button class="btn btn-outline-secondary" type="button" id="btnFixClose2">❌ Đóng</button>
+
+      <div class="bv-footer-status" id="fixFooterStatus">ℹ Chưa có chỉnh sửa</div>
+
+      <div class="bv-footer-actions">
+        <button class="btn btn-outline-warning" type="button" id="btnFixNext">🔁 Đổi đề xuất</button>
+        <button class="btn btn-outline-light" type="button" id="btnFixCopy">📋 Copy đề xuất</button>
+        <button class="btn btn-success" type="button" id="btnFixExportApplied" disabled
+                title="Xuất danh sách ca đã chỉnh thời gian">⬇ Xuất DS đã chỉnh</button>
+        <button class="btn btn-success" type="button" id="btnFixApply">✅ Áp dụng</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2061,7 +2262,7 @@ return false;
 
   function openFixModal(){ 
     if($id("fixBackdrop")) $id("fixBackdrop").style.display = "block";
-    if($id("fixModal")) $id("fixModal").style.display = "block";
+    if($id("fixModal")) $id("fixModal").style.display = "flex";
   }
   function closeFixModal(){
     if($id("fixBackdrop")) $id("fixBackdrop").style.display = "none";
@@ -2220,6 +2421,7 @@ Phút: ${s.dur}`;
     const list = window.__appliedFixes || [];
     if(!list.length){
       tb.innerHTML = '<tr><td colspan="6" style="padding:10px;color:#64748b;">Chưa có chỉnh sửa nào.</td></tr>';
+      updateFixFooterUI();
       return;
     }
     tb.innerHTML = list.slice().reverse().map(it => {
@@ -2238,7 +2440,36 @@ Phút: ${s.dur}`;
         </tr>
       `;
     }).join("");
+    updateFixFooterUI();
   }
+
+  function updateFixFooterUI(){
+    const list = window.__appliedFixes || [];
+    const n = Array.isArray(list) ? list.length : 0;
+
+    const status = document.getElementById("fixFooterStatus");
+    if(status){
+      status.textContent = n ? `✔ Đã chỉnh: ${n} ca` : "ℹ Chưa có chỉnh sửa";
+    }
+
+    const btnExp = document.getElementById("btnFixExportApplied");
+    if(btnExp){
+      btnExp.disabled = !n;
+      btnExp.style.opacity = n ? "1" : ".6";
+      btnExp.style.cursor = n ? "pointer" : "not-allowed";
+      btnExp.setAttribute("aria-disabled", n ? "false" : "true");
+    }
+
+    // Đồng bộ nút tab "✅ Xuất DS đã chỉnh"
+    const tabBtn = document.getElementById("btnDownloadAppliedXLSX");
+    if(tabBtn){
+      const ok = !!n;
+      tabBtn.style.opacity = ok ? "1" : ".65";
+      tabBtn.style.cursor = ok ? "pointer" : "not-allowed";
+      tabBtn.setAttribute("aria-disabled", ok ? "false" : "true");
+    }
+  }
+
 
   function applyFixSuggestionImpl(){
     try{ if(typeof showDiag==='function') showDiag('Đang áp dụng thời gian đề xuất...', 'warning'); }catch(e){}
@@ -2319,6 +2550,23 @@ Phút: ${s.dur}`;
   (function(){
     const btn = document.getElementById("btnFixApply");
     if(btn) btn.addEventListener("click", applyFixSuggestion);
+
+    const btnExp = document.getElementById("btnFixExportApplied");
+    if(btnExp && !btnExp.__bound){
+      btnExp.addEventListener("click", ()=>{
+        if(btnExp.disabled) return;
+        if(typeof downloadAppliedFixesXLSX === "function") downloadAppliedFixesXLSX();
+      });
+      btnExp.__bound = true;
+    }
+
+    const c1 = document.getElementById("btnFixClose");
+    if(c1) c1.addEventListener("click", ()=>{ try{ closeFixModal(); }catch(e){} });
+
+    const c2 = document.getElementById("btnFixClose2");
+    if(c2) c2.addEventListener("click", ()=>{ try{ closeFixModal(); }catch(e){} });
+
+    try{ updateFixFooterUI(); }catch(e){}
 
     const tgl = document.getElementById("btnToggleApplied");
     const wrap = document.getElementById("appliedFixesWrap");
@@ -2522,6 +2770,133 @@ Phút: ${s.dur}`;
       return (window.applyFixSuggestion) ? window.applyFixSuggestion() : undefined;
     }
   }
+</script>
+<script>
+  function downloadAppliedFixesXLSX(){
+    try{
+      if(typeof XLSX === "undefined"){
+        alert("Chưa có thư viện XLSX. Hãy đặt file xlsx.full.min.js cùng thư mục và tải lại trang.");
+        return;
+      }
+      const list = (window.__appliedFixes && Array.isArray(window.__appliedFixes)) ? window.__appliedFixes : [];
+      if(!list.length){
+        alert("Chưa có chỉnh sửa nào để tải.");
+        return;
+      }
+
+      const rows = list.map((it, idx)=>({
+        "STT": idx + 1,
+        "Dòng": it.rownum ?? "",
+        "Máy": it.machine ?? "",
+        "Mã KCB": it.maKCB ?? "",
+        "BĐ cũ": it.oldStart ?? "",
+        "BĐ mới": it.newStart ?? "",
+        "KT cũ": it.oldEnd ?? "",
+        "KT mới": it.newEnd ?? "",
+        "Lúc áp dụng": it.appliedAt ?? ""
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows, {skipHeader:false});
+
+      const colKeys = Object.keys(rows[0] || {});
+      ws["!cols"] = colKeys.map(k=>{
+        let w = k.length;
+        for(const r of rows){
+          const v = String(r[k] ?? "");
+          if(v.length > w) w = Math.min(60, v.length);
+        }
+        return { wch: w + 2 };
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws, "DS_da_sua");
+
+      const pad = (n)=> String(n).padStart(2,"0");
+      const d = new Date();
+      const fname = `BVST_DS_da_sua_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
+      XLSX.writeFile(wb, fname);
+    }catch(err){
+      console.error(err);
+      alert("Không xuất được Excel: " + (err?.message || err));
+    }
+  }
+
+  (function(){
+    const btn = document.getElementById("btnDownloadAppliedXLSX");
+    if(btn && !btn.__bound){
+      btn.addEventListener("click", downloadAppliedFixesXLSX);
+      btn.__bound = true;
+    }
+  })();
+</script>
+<script>
+  function updateDownloadBtnState(){
+    const btn = document.getElementById("btnDownloadAppliedXLSX");
+    if(!btn) return;
+    const list = (window.__appliedFixes && Array.isArray(window.__appliedFixes)) ? window.__appliedFixes : [];
+    const has = list.length > 0;
+
+    if(has){
+      btn.setAttribute("aria-disabled","false");
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+      btn.style.background = "#16a34a";
+      btn.style.border = "1px solid #15803d";
+      btn.style.color = "#ffffff";
+      btn.textContent = "✅ Xuất DS đã chỉnh";
+    }else{
+      btn.setAttribute("aria-disabled","true");
+      btn.style.opacity = ".65";
+      btn.style.cursor = "not-allowed";
+      btn.style.background = "#dcfce7";
+      btn.style.border = "1px solid #22c55e";
+      btn.style.color = "#065f46";
+      btn.textContent = "✅ Xuất DS đã chỉnh";
+    }
+  }
+
+  // Call once on load
+  document.addEventListener("DOMContentLoaded", updateDownloadBtnState);
+
+  // Patch apply to update button state after apply
+  (function(){
+    const oldApply = window.applyFixSuggestion;
+    if(typeof oldApply === "function" && !oldApply.__patchedBtn){
+      window.applyFixSuggestion = function(){
+        const r = oldApply();
+        try{ updateDownloadBtnState(); }catch(e){}
+        return r;
+      };
+      window.applyFixSuggestion.__patchedBtn = true;
+    }
+  })();
+
+  // Also update after analysis (some users reload saved edits)
+  (function(){
+    const oldRun = window.runAnalysis;
+    if(typeof oldRun === "function" && !oldRun.__patchedBtn){
+      window.runAnalysis = function(){
+        const r = oldRun.apply(this, arguments);
+        try{ updateDownloadBtnState(); }catch(e){}
+        return r;
+      };
+      window.runAnalysis.__patchedBtn = true;
+    }
+  })();
+</script>
+<script>
+  function bindDownloadAppliedTabBtn(){
+    const btn = document.getElementById("btnDownloadAppliedXLSX");
+    if(!btn || btn.__bound) return;
+    btn.addEventListener("click", ()=>{
+      if(btn.getAttribute("aria-disabled")==="true" || btn.style.cursor==="not-allowed") return;
+      if(typeof downloadAppliedFixesXLSX === "function") downloadAppliedFixesXLSX();
+      else alert("Thiếu hàm xuất Excel.");
+    });
+    btn.__bound = true;
+  }
+  document.addEventListener("DOMContentLoaded", bindDownloadAppliedTabBtn);
+  try{ bindDownloadAppliedTabBtn(); }catch(e){}
 </script>
 </body>
 </html>
