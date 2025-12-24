@@ -112,7 +112,13 @@
     }
     .table td{border-top:1px solid rgba(255,255,255,.08);vertical-align:middle;font-size:.88rem;}
     .rowerr{background:rgba(251,191,36,.06);}
-    .badge-soft{
+    
+    /* Tô màu theo Mã KCB (cùng mã => cùng màu) */
+    tr.err-row.kcbTint{
+      background: var(--kcbBg) !important;
+      border-left: 6px solid var(--kcbBorder) !important;
+    }
+.badge-soft{
       display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
       border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
       color:rgba(255,255,255,.86);font-weight:900;font-size:.78rem;white-space:nowrap;
@@ -1520,7 +1526,7 @@ for (const [key, arr] of mapStart.entries()) {
       tb.innerHTML = items.map((e, idx) => {
         const cls = (e.type === ERR_END_ANY) ? "warn" : "warn";
         return `
-          <tr class="rowerr err-row" data-rownum="${e.rownum}" data-errtype="${escapeHtml(e.type)}">
+          <tr class="rowerr err-row" data-rownum="${e.rownum}" data-errtype="${escapeHtml(e.type)}" data-kcb="${escapeHtml(safe(e.maKCB))}">
             <td class="mono">${idx+1}</td>
             <td><span class="badge-soft ${cls}">⚠ ${escapeHtml(e.type)}</span></td>
             <td>${escapeHtml(e.desc)}</td>
@@ -1536,6 +1542,45 @@ for (const [key, arr] of mapStart.entries()) {
           </tr>
         `;
       }).join("");
+      applyKcbColors();
+    }
+
+
+    // --- Tô màu các ca trùng Mã KCB (cùng mã => cùng màu) ---
+    const KCB_PALETTE = [
+      { border: "#22c55e", bg: "rgba(34,197,94,.10)" },   // green
+      { border: "#3b82f6", bg: "rgba(59,130,246,.10)" },  // blue
+      { border: "#a855f7", bg: "rgba(168,85,247,.10)" },  // purple
+      { border: "#f97316", bg: "rgba(249,115,22,.10)" },  // orange
+      { border: "#06b6d4", bg: "rgba(6,182,212,.10)" },   // cyan
+      { border: "#e11d48", bg: "rgba(225,29,72,.10)" },   // rose
+      { border: "#84cc16", bg: "rgba(132,204,22,.10)" },  // lime
+      { border: "#f59e0b", bg: "rgba(245,158,11,.10)" }   // amber
+    ];
+
+    function hashStr(s){
+      // djb2 (ổn định, nhanh)
+      let h = 5381;
+      for (let i=0;i<s.length;i++) h = ((h<<5)+h) + s.charCodeAt(i);
+      return (h >>> 0);
+    }
+
+    function applyKcbColors(){
+      const rows = Array.from(document.querySelectorAll("#tbody tr.err-row"));
+      if (!rows.length) return;
+
+      for (const r of rows){
+        const kcb = (r.dataset.kcb || "").trim();
+        if (!kcb) { r.classList.remove("kcbTint"); continue; }
+
+        const p = KCB_PALETTE[ hashStr(kcb) % KCB_PALETTE.length ];
+        r.classList.add("kcbTint");
+        r.style.setProperty("--kcbBorder", p.border);
+        r.style.setProperty("--kcbBg", p.bg);
+
+        // tooltip nhẹ để dễ kiểm tra nhanh
+        if (!r.title) r.title = `Mã KCB: ${kcb}`;
+      }
     }
 
     function buildGroupByMachine(errors){
@@ -1581,7 +1626,7 @@ for (const [key, arr] of mapStart.entries()) {
                     </thead>
                     <tbody>
                       ${arr.map((e,i)=>`
-                        <tr class="rowerr err-row" data-rownum="${e.rownum}" data-errtype="${escapeHtml(e.type)}">
+                        <tr class="rowerr err-row" data-rownum="${e.rownum}" data-errtype="${escapeHtml(e.type)}" data-kcb="${escapeHtml(safe(e.maKCB))}">
                           <td class="mono">${i+1}</td>
                           <td><span class="badge-soft warn">${escapeHtml(e.type)}</span></td>
                           <td>${escapeHtml(e.desc)}</td>
