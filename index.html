@@ -1387,12 +1387,14 @@ html, body { height: 100%; }
     function analyzeXQ(rows) {
       const errors = [];
 
-      // (3) TH < 6P : duration >=0 && <6
+      // (3) TH < 6P : duration < 6 (tính cả số âm)
       for (const r of rows) {
         if (r.start && r.end) {
           const dur = minutesBetween(r.start, r.end);
-          if (dur >= 0 && dur < 6) {
-            errors.push(mkErr(ERR_DUR_LT_6, r, `Thời gian thực hiện ${dur} phút < 6 phút`, []));
+          // Bắt cả trường hợp âm (KT < BĐ) để không bỏ sót
+          if (dur < 6) {
+            const note = (dur < 0) ? " (âm)" : "";
+            errors.push(mkErr(ERR_DUR_LT_6, r, `Thời gian thực hiện ${dur} phút${note} < 6 phút`, []));
           }
         }
       }
